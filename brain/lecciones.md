@@ -27,3 +27,4 @@ Propias:
 - 2026-11-04 — Un botón `disabled` mientras trabaja pierde el foco (va a `<body>`): usar `aria-disabled`.
 - 2026-11-04 — Pruebas con diálogos anidados: no pulsar Escape hasta que el de arriba tenga el foco; mejor su botón «Schließen».
 - 2026-11-04 — Los revisores no deben escribir en los datos vivos ni aunque crean que un año está cerrado: comprobarlo antes con un GET.
+- 2026-11-04 — Dos aprobaciones seguidas paradas por no anotar archivos de documentación: la plantilla de encargo ya incluye siempre `brain/`, `CLAUDE.md`, `docs/producto.md` y `tools/estado/datos.json`.
