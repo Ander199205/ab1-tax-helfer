@@ -11,7 +11,10 @@ import { parseAmount, formatAmount } from "../src/lib/money.ts";
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const resetData = () => {
-  execFileSync(process.execPath, ["--no-warnings", "tools/admin.mjs", "demo"], { stdio: "ignore" });
+  execFileSync(process.execPath, ["--no-warnings", "tools/admin.mjs", "demo"], {
+    stdio: "ignore",
+    env: { ...process.env, TAX_HELFER_DEMO: "1" },
+  });
   jar.clear();
 };
 
@@ -364,7 +367,7 @@ describe("API", () => {
     db.close();
     assert.ok(rows.length >= 3);
     for (const r of rows) {
-      assert.match(r.password_hash, /^scrypt\$32768\$8\$1\$/);
+      assert.match(r.password_hash, /^scrypt\$131072\$8\$1\$/);
       assert.ok(!r.password_hash.includes("Demo-"));
     }
   });
@@ -429,7 +432,7 @@ describe("API", () => {
 
   test("contraseña propia y cierre de sesión", async () => {
     const old = await cookieFor("studio");
-    const wrong = await api("POST", "/api/auth/password", { current: "falsch", next: "Ganz-neues-Passwort-1" }, { who: "studio" });
+    const wrong = await api("POST", "/api/auth/password", { current: "falsch", next: "Blauer-Elefant-tanzt-7" }, { who: "studio" });
     assert.equal(wrong.status, 400);
     assert.ok(wrong.body.errors.current);
     const short = await api("POST", "/api/auth/password", { current: CREDENTIALS.studio[1], next: "kurz" }, { who: "studio" });
@@ -437,15 +440,133 @@ describe("API", () => {
     const res = await fetch(BASE + "/api/auth/password", {
       method: "POST",
       headers: { "Content-Type": "application/json", Cookie: old },
-      body: JSON.stringify({ current: CREDENTIALS.studio[1], next: "Ganz-neues-Passwort-1" }),
+      body: JSON.stringify({ current: CREDENTIALS.studio[1], next: "Blauer-Elefant-tanzt-7" }),
     });
     assert.equal(res.status, 204);
     const fresh = res.headers.get("set-cookie").split(";")[0];
     assert.equal((await fetch(BASE + "/api/receipts", { headers: { Cookie: old } })).status, 401, "la sesión anterior ya no vale");
     assert.equal((await fetch(BASE + "/api/receipts", { headers: { Cookie: fresh } })).status, 200);
-    assert.equal((await login("studio", "Ganz-neues-Passwort-1")).status, 200);
+    assert.equal((await login("studio", "Blauer-Elefant-tanzt-7")).status, 200);
     // cerrar sesión la invalida en el servidor
     assert.equal((await fetch(BASE + "/api/auth/logout", { method: "POST", headers: { Cookie: fresh } })).status, 204);
     assert.equal((await fetch(BASE + "/api/receipts", { headers: { Cookie: fresh } })).status, 401);
+  });
+
+  // ── Revisión D/E de la 4a ──
+  // Todas las rutas de la API, sacadas de los archivos route.ts, con ids de la otra cuenta y en las dos direcciones.
+  function apiRoutes(dir = "src/app/api", prefix = "/api") {
+    const out = [];
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) out.push(...apiRoutes(full, `${prefix}/${entry.name}`));
+      else if (entry.name === "route.ts") {
+        const src = fs.readFileSync(full, "utf8");
+        const methods = [...src.matchAll(/export async function (GET|POST|PATCH|DELETE)/g)].map((m) => m[1]);
+        out.push({ path: prefix, methods });
+      }
+    }
+    return out;
+  }
+  const OWN = {
+    muster: { receipts: "beleg-01", "tax-years": "jahr-2025", categories: "kat-buero", file: "8f1c2a10-1111-4a1a-9a01-000000000001" },
+    studio: { receipts: "studio-beleg-1", "tax-years": "studio-jahr-2026", categories: "studio-kat-1", file: "00000000-0000-4000-8000-000000000000" },
+  };
+  test("aislamiento en todas las rutas de la API (las dos direcciones)", async () => {
+    const routes = apiRoutes();
+    assert.ok(routes.length >= 10, "se encontraron las rutas");
+    for (const [me, other] of [["studio", "muster"], ["muster", "studio"]]) {
+      for (const { path: route, methods } of routes) {
+        if (route.startsWith("/api/auth")) continue;
+        const col = route.split("/")[2];
+        const url = route.replace("[id]", OWN[other][col] ?? "x").replace("[fileId]", OWN[other].file);
+        for (const method of methods) {
+          const isList = !route.includes("[");
+          if (isList && method === "POST") continue; // crear en la propia cuenta no toca a la otra
+          let res;
+          if (route.endsWith("/files") && method === "POST") {
+            const form = new FormData();
+            form.append("files", new Blob([PDF], { type: "application/pdf" }), "x.pdf");
+            res = await fetch(BASE + url, { method, body: form, headers: { Cookie: await cookieFor(me) } });
+          } else res = await fetch(BASE + url, { method, headers: { Cookie: await cookieFor(me), "Content-Type": "application/json" }, body: method === "GET" || method === "DELETE" ? undefined : JSON.stringify({ note: "x", name: "x", active: false }) });
+          const label = `${me} ${method} ${url}`;
+          if (route.startsWith("/api/admin")) assert.equal(res.status, 403, label);
+          else if (isList) {
+            assert.equal(res.status, 200, label);
+            const text = await res.text();
+            for (const id of Object.values(OWN[other])) assert.ok(!text.includes(id), `${label} filtra ${id}`);
+          } else assert.equal(res.status, 404, label);
+        }
+      }
+    }
+    // PATCH de un Beleg propio con la categoría de la otra cuenta
+    const r = await api("PATCH", "/api/receipts/studio-beleg-1", { categoryId: "kat-buero" }, { who: "studio" });
+    assert.equal(r.status, 400);
+  });
+
+  test("límite de intentos: 5 fallos → 429 aunque después la contraseña sea buena", async () => {
+    const email = `bloqueo-${Date.now()}@beispiel.de`;
+    const created = await api("POST", "/api/admin/users", { name: "Bloqueo", email }, { who: "admin" });
+    for (let i = 0; i < 5; i++) assert.equal((await login(email, "falsch-falsch")).status, 401);
+    const blocked = await login(email, created.body.password);
+    assert.equal(blocked.status, 429);
+    assert.match(blocked.body.error, /Zu viele Fehlversuche/);
+  });
+
+  test("peticiones desde otra web: rechazadas (también subidas y borrado de archivos); API sin caché", async () => {
+    const studio = await cookieFor("studio");
+    const form = new FormData();
+    form.append("files", new Blob([PDF], { type: "application/pdf" }), "x.pdf");
+    const up = await fetch(`${BASE}/api/receipts/studio-beleg-1/files`, { method: "POST", body: form, headers: { Cookie: studio, Origin: "https://boese.example" } });
+    assert.equal(up.status, 403);
+    const cookie = await cookieFor("muster");
+    const evil = await fetch(BASE + "/api/auth/logout", { method: "POST", headers: { Cookie: cookie, Origin: "https://boese.example" } });
+    assert.equal(evil.status, 403);
+    const sibling = await fetch(BASE + "/api/categories", { method: "POST", headers: { Cookie: cookie, "Content-Type": "application/json", "Sec-Fetch-Site": "same-site" }, body: '{"name":"X"}' });
+    assert.equal(sibling.status, 403);
+    assert.equal((await fetch(BASE + "/api/receipts", { headers: { Cookie: cookie } })).status, 200, "sigue con sesión");
+    assert.equal((await fetch(BASE + "/api/receipts", { headers: { Cookie: cookie } })).headers.get("cache-control"), "no-store");
+  });
+
+  test("sesiones: volver a entrar invalida la anterior; caducidad por inactividad y absoluta", async () => {
+    const { createHash } = await import("node:crypto");
+    const { getDb } = await import("../src/lib/db/database.ts");
+    const db = getDb();
+    const tokenOf = (cookie) => cookie.split("=").slice(1).join("=");
+    const idOf = (cookie) => createHash("sha256").update(tokenOf(cookie)).digest("hex");
+    // volver a entrar en el mismo navegador
+    const first = (await login("muster")).cookie.split(";")[0];
+    const again = await fetch(BASE + "/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: first },
+      body: JSON.stringify({ email: CREDENTIALS.muster[0], password: CREDENTIALS.muster[1] }),
+    });
+    assert.equal(again.status, 200);
+    assert.equal((await fetch(BASE + "/api/receipts", { headers: { Cookie: first } })).status, 401);
+    // en la tabla solo hay hashes, nunca el token
+    assert.ok(!db.prepare("SELECT 1 FROM sessions WHERE id = ?").get(tokenOf(first)));
+    // 9 h sin actividad → caducada
+    const idle = (await login("muster")).cookie.split(";")[0];
+    db.prepare("UPDATE sessions SET last_seen_at = ? WHERE id = ?").run(new Date(Date.now() - 9 * 3600e3).toISOString(), idOf(idle));
+    assert.equal((await fetch(BASE + "/api/receipts", { headers: { Cookie: idle } })).status, 401);
+    // «angemeldet bleiben» con más de 30 días → caducada
+    const longer = (await login("muster", undefined, true)).cookie.split(";")[0];
+    db.prepare("UPDATE sessions SET expires_at = ? WHERE id = ?").run(new Date(Date.now() - 1000).toISOString(), idOf(longer));
+    assert.equal((await fetch(BASE + "/api/receipts", { headers: { Cookie: longer } })).status, 401);
+    // sin «angemeldet bleiben», al alargarse nunca pasa de 30 días desde que se abrió
+    const capped = (await login("muster")).cookie.split(";")[0];
+    const opened = new Date(Date.now() - 30 * 24 * 3600e3 + 3600e3).toISOString(); // abierta hace 30 días menos 1 h
+    db.prepare("UPDATE sessions SET created_at = ?, last_seen_at = ? WHERE id = ?").run(opened, new Date(Date.now() - 10 * 60e3).toISOString(), idOf(capped));
+    assert.equal((await fetch(BASE + "/api/receipts", { headers: { Cookie: capped } })).status, 200);
+    const exp = Date.parse(db.prepare("SELECT expires_at FROM sessions WHERE id = ?").get(idOf(capped)).expires_at);
+    assert.ok(exp <= Date.parse(opened) + 30 * 24 * 3600e3 + 1000, "el alargue respeta el máximo de 30 días");
+    jar.delete("muster"); // las sesiones de esta prueba ya no valen
+  });
+
+  test("contraseñas débiles rechazadas", async () => {
+    for (const weak of ["aaaaaaaaaaaa", "Passwort-2026!", "x".repeat(300)]) {
+      const r = await api("POST", "/api/auth/password", { current: CREDENTIALS.muster[1], next: weak }, { who: "muster" });
+      assert.equal(r.status, 400, weak.slice(0, 20));
+      assert.ok(r.body.errors.next);
+    }
   });
 });

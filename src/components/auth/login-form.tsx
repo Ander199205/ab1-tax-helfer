@@ -15,6 +15,7 @@ export function LoginForm() {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
     const form = new FormData(event.currentTarget);
     setBusy(true);
     setError(undefined);
@@ -42,18 +43,17 @@ export function LoginForm() {
     <form onSubmit={submit} noValidate className="space-y-4">
       <div className="space-y-1.5">
         <Label htmlFor="login-email">E-Mail</Label>
-        <Input ref={emailRef} id="login-email" name="email" type="email" autoComplete="username" required aria-describedby={error ? "login-error" : undefined} aria-invalid={Boolean(error)} />
+        <Input ref={emailRef} id="login-email" name="email" type="email" autoComplete="username" autoFocus required aria-describedby={error ? "login-error" : undefined} aria-invalid={Boolean(error)} />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="login-password">Passwort</Label>
         <Input id="login-password" name="password" type="password" autoComplete="current-password" required aria-describedby={error ? "login-error" : undefined} aria-invalid={Boolean(error)} />
       </div>
-      <div className="flex items-center gap-2">
-        <input id="login-remember" name="remember" type="checkbox" className="size-4 accent-foreground" />
-        <Label htmlFor="login-remember" className="font-normal">
-          Angemeldet bleiben (30 Tage)
-        </Label>
-      </div>
+      {/* Casilla y texto en la misma etiqueta: zona táctil de toda la fila (≥ 24 px). */}
+      <label htmlFor="login-remember" className="flex min-h-8 cursor-pointer items-center gap-2 text-sm">
+        <input id="login-remember" name="remember" type="checkbox" className="size-5 accent-foreground" />
+        Angemeldet bleiben (30 Tage)
+      </label>
       {error && <FieldWarning id="login-error">{error}</FieldWarning>}
       <Button type="submit" className="w-full" aria-disabled={busy}>
         {busy ? "Wird angemeldet …" : "Anmelden"}

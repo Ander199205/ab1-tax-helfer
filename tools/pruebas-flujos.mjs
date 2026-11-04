@@ -19,7 +19,8 @@ const i = process.argv.indexOf("--url");
 const BASE = i > -1 ? process.argv[i + 1] : "http://localhost:3000";
 const OUT = ".capturas";
 fs.mkdirSync(OUT, { recursive: true });
-const resetData = () => execFileSync(process.execPath, ["--no-warnings", "tools/admin.mjs", "demo"], { stdio: "ignore" });
+const resetData = () =>
+  execFileSync(process.execPath, ["--no-warnings", "tools/admin.mjs", "demo"], { stdio: "ignore", env: { ...process.env, TAX_HELFER_DEMO: "1" } });
 
 async function signIn(page, email, password) {
   await page.goto(`${BASE}/anmelden`, { waitUntil: "networkidle" });
@@ -69,9 +70,10 @@ for (const width of [375, 1440]) {
   await shot("anmelden");
   await step("anmelden als Muster Design", async () => {
     await signIn(page, "muster@beispiel.de", "Demo-Muster-2026!");
-    await visible(page.getByText("Angemeldet als"));
-    await visible(page.getByText("Muster Design (Demo)"));
-    if (await page.getByRole("link", { name: "Verwaltung" }).count()) throw new Error("un cliente ve «Verwaltung»");
+    await visible(page.getByRole("button", { name: /^Abmelden/ }).locator("visible=true"));
+    const who = width < 768 ? await page.getByRole("button", { name: /^Abmelden/ }).locator("visible=true").getAttribute("aria-label") : await page.getByText("Angemeldet als").textContent();
+    if (!who.includes("Muster Design (Demo)")) throw new Error(`nombre de la cuenta: ${who}`);
+    if (await page.getByRole("link", { name: "Kundenkonten" }).count()) throw new Error("un cliente ve «Kundenkonten»");
   });
 
   // 1. Kategorien
@@ -283,7 +285,7 @@ for (const width of [375, 1440]) {
 
   // 5. Abmelden y Verwaltung (fase 4a)
   await step("abmelden → Anmelden; danach keine Seite ohne Anmeldung", async () => {
-    await page.getByRole("button", { name: "Abmelden" }).click();
+    await page.getByRole("button", { name: /^Abmelden/ }).locator("visible=true").click();
     await page.waitForURL(/\/anmelden$/);
     await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
     if (!page.url().endsWith("/anmelden")) throw new Error("tras cerrar sesión sigue entrando");
@@ -291,9 +293,9 @@ for (const width of [375, 1440]) {
   let newPassword = "";
   await step("Verwaltung: Kundenkonto anlegen, Passwort wird einmal angezeigt", async () => {
     await signIn(page, "admin@beispiel.de", "Demo-Admin-2026!");
-    await page.getByRole("link", { name: "Verwaltung" }).click();
+    await page.getByRole("link", { name: "Kundenkonten" }).click();
     await page.waitForURL(/\/verwaltung$/);
-    await page.getByLabel("Name des Kunden").fill(`Testkunde ${width}`);
+    await page.getByLabel("Name (Firma oder Person)").fill(`Testkunde ${width}`);
     await page.getByLabel("E-Mail").fill(`test${width}@beispiel.de`);
     await page.getByRole("button", { name: "Konto anlegen" }).click();
     const dialog = page.getByRole("dialog", { name: "Konto angelegt" });
@@ -302,10 +304,12 @@ for (const width of [375, 1440]) {
     if (!/^[A-Za-z2-9]{4}(-[A-Za-z2-9]{4}){3}$/.test(newPassword)) throw new Error(`contraseña: ${newPassword}`);
     await dialog.getByRole("button", { name: "Fertig" }).click();
     await visible(page.getByText(`Testkunde ${width}`));
+    // el foco vuelve al campo del nombre para dar de alta otro
+    await page.waitForFunction(() => document.activeElement?.id === "acc-name");
   });
   await shot("verwaltung");
   await step("neues Konto meldet sich an und sieht nur ein leeres Konto", async () => {
-    await page.getByRole("button", { name: "Abmelden" }).click();
+    await page.getByRole("button", { name: /^Abmelden/ }).locator("visible=true").click();
     await page.waitForURL(/\/anmelden$/);
     await signIn(page, `test${width}@beispiel.de`, newPassword);
     await visible(page.getByText("Noch keine Steuerjahre."));

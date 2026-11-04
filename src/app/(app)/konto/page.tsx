@@ -11,7 +11,7 @@ export default async function AccountPage() {
     <>
       <PageHeader title="Konto" description={`${user.name} · ${user.email}`} />
       <h2 className="mb-3 text-lg font-semibold">Passwort ändern</h2>
-      <PasswordForm />
+      <PasswordForm email={user.email} />
     </>
   );
 }

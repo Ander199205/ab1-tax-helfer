@@ -1,7 +1,7 @@
 # Encargo 4: seguridad antes de datos reales (fase 4)
 
 - Slug / rama: `feature/fase-4a-cuentas` (4a) y `feature/fase-4b-proteccion` (4b)
-- Fecha: 04.11.2026 · Estado: 4a en construcción
+- Fecha: 04.11.2026 · Estado: 4a revisada y corregida, pendiente de aprobación · 4b sin empezar
 - Tamaño: grande → se divide en dos encargos que se especifican aquí y se aprueban por separado
 
 ## Por qué en dos partes
@@ -86,17 +86,72 @@ Supuestos de riesgo bajo:
 
 ---
 
-## 8. Evidencias
-(pendiente)
+## 8. Evidencias (4a)
 
-## 9. Hallazgos de los revisores
-(pendiente)
+Ejecutadas el 04.11.2026 en `feature/fase-4a-cuentas`, con `npm start` recién compilado y reiniciado:
 
-## 10. Controles obligatorios
-(pendiente)
+| # | Resultado | Evidencia |
+|---|---|---|
+| 1 | cumple | `pruebas-api.mjs`: sin sesión, las 4 rutas GET, POST/PATCH/DELETE y los archivos → 401; las 7 páginas → 307 a `/anmelden` |
+| 2 | cumple | cookie `__Host-th_session` con `HttpOnly; Secure; SameSite=lax`, sin `Expires` salvo «angemeldet bleiben»; hash `scrypt$131072$8$1$` (OWASP) en la BD, nunca el token (solo su SHA-256); cerrar sesión, volver a entrar, cambiar o restablecer la contraseña y desactivar invalidan las sesiones; caducidad por inactividad (9 h → 401), absoluta (`expires_at` pasado → 401) y tope de 30 días al alargar |
+| 3 | cumple | prueba que **lee todas las rutas de `src/app/api/**/route.ts`** y prueba cada método con ids de la otra cuenta, en las dos direcciones: 404 (403 en admin), y las listas no contienen ids ajenos; categoría ajena → 400 |
+| 4 | cumple | cliente → 403 en `/api/admin/*`; alta con contraseña inicial de 16 caracteres; desactivada → 401 en la sesión abierta y 403 al entrar; restablecer → la antigua deja de valer; el admin no puede desactivarse |
+| 5 | cumple | **53/53** pruebas de la API (incl. todas las de las fases 2–3) y `pruebas-flujos.mjs` 0 fallos a 375 y 1440 px (incl. iniciar sesión, contraseña falsa, cerrar sesión, alta desde «Kundenkonten» y entrar con la cuenta nueva) |
+| — | cumple | `capturas.mjs --login`: 0 problemas en 6 rutas × 4 anchos y en `/verwaltung` con admin; tsc y lint sin errores; `npm audit --omit=dev` 0 vulnerabilidades |
+| — | cumple | a mano: 900×400 el pie no tapa la navegación (la lista se desplaza); 667×375 la barra mide 105 px y no es fija; protección de `demo` probada con una BD aparte que tenía una cuenta real |
 
-## 11. Decisiones tomadas
-(pendiente)
+## 9. Hallazgos de los revisores (4a)
 
-## 12. Fusión
-(pendiente)
+Tres revisores con contexto limpio: A+B (diseño y accesibilidad), C (idioma), D+E (seguridad y técnica). Ninguno bloqueante.
+
+| Gravedad | Bloque | Problema | Estado |
+|---|---|---|---|
+| importante | D | `scryptSync` bloqueaba el servidor: 30 intentos simultáneos → 3 s de espera para todos | corregido: scrypt asíncrono + límite de intentos (5 por correo y 100 por IP cada 15 min → 429), adelantado de la 4b; prueba |
+| importante | D | Clave de `documents` sin `owner_id` | corregido: `PRIMARY KEY (owner_id, collection, id)` con migración automática |
+| importante | D | `demo` podía crear un admin con contraseña pública en un servidor | corregido: exige `TAX_HELFER_DEMO=1` y nunca con `NODE_ENV=production`. Bloquear en producción el inicio de sesión de cuentas `@beispiel.de` → **pendiente (fase 6)** |
+| importante | D | CSRF desde subdominio hermano (logout, subidas) y cookie plantable | corregido: comprobación de `Sec-Fetch-Site`/`Origin` en todo cambio (middleware + subidas) y cookie `__Host-`; prueba |
+| importante | E | La prueba de aislamiento no recorría todas las rutas ni las dos direcciones; sin pruebas de caducidad | corregido: rutas sacadas del sistema de archivos × métodos × 2 direcciones; caducidades y re-login probados |
+| importante | A | Filas de cuentas aplastadas a 768 px; correo cortado | corregido: texto a lo ancho hasta 1024 px, acciones debajo, correo con `break-all` |
+| importante | B | Foco a `<body>` al cerrar el diálogo de la contraseña | corregido: vuelve al botón o al campo del nombre; en la prueba |
+| importante | A | Pie de la barra tapaba enlaces en ventanas bajas | corregido: barra en columna, navegación desplazable, pie en flujo |
+| importante | B | Barra fija de 154 px en móvil horizontal (2.4.11) | corregido: «Abmelden» en la fila del logo y barra no fija en horizontal |
+| importante | A | Nombre largo cortado en el pie | corregido: salto de línea en escritorio; en móvil, en el `aria-label` y `title` |
+| importante | A4 | Doble envío en alta, inicio de sesión, contraseña y cierre de sesión | corregido: los manejadores comprueban `busy` |
+| importante | C | «Verwaltung» suena a Hacienda y como rol no se entiende | corregido: sección «Kundenkonten» (la ruta sigue siendo `/verwaltung`), rol «Admin», «ab1 Team (Demo)» |
+| menor | D | Sesión sin «remember» sin tope absoluto; sesiones viejas sin borrar; re-login no borraba la anterior; `remember` perdido al cambiar la contraseña | corregidos |
+| menor | D | N=2^15 por debajo de OWASP; contraseñas tipo «aaaaaaaaaa»; sin máximo; hash ficticio al importar | corregidos (N=2^17 con recálculo al entrar; lista y variedad mínima; 256 máx.; cálculo perezoso) |
+| menor | E | `transaction()` sin anidar y aceptando async; `busy_timeout` de 5 s; comentario de `exclusive` desfasado; `crear-admin` sin validar | corregidos (SAVEPOINT, tipo síncrono, 1 s) |
+| menor | D | API sin `Cache-Control: no-store` | corregido en el middleware; prueba |
+| menor | B/A | Gestor de contraseñas sin `username` en Konto; foco al primer error; casilla de 16 px; foco al llegar a «Anmelden»; enlaces ocultos en la barra móvil | corregidos (campo oculto, foco, fila pulsable, `autoFocus`, degradado en el borde) |
+| menor | C | 10 textos (anmelden/abmelden, «Schreib uns», «angelegt am», «Name (Firma oder Person)», etc.) | corregidos |
+| menor | C | Mensajes técnicos («Ungültige Daten.», «Nur JSON …») | **descartado**: solo salen con peticiones mal formadas, nunca desde la interfaz |
+| menor | E | Aviso «experimental» de `node:sqlite` | aceptado en D1; anotado en decisiones; probar en cada actualización de Node |
+| menor | E | JSON viejos de la fase 3 en `data/` | **pendiente de Ander**: el entorno no dejó borrarlos (comprobación de seguridad); no se usan y están fuera de git |
+| nota | D | Un cliente que abre `/verwaltung` recibe 200 con redirección en el stream (sin datos) | aceptado: no hay fuga; se revisa al desplegar |
+| nota | D | Safari antiguo no guarda cookies `Secure` en `http://localhost` | anotado en CLAUDE.md: en local, Chrome o Firefox; en producción siempre HTTPS |
+| nota | — | Al añadir el middleware, Next recortaba a 10 MB las subidas (llegaban vacías) | **encontrado por las pruebas** y corregido: las subidas no pasan por el middleware y comprueban el origen en su manejador |
+
+## 10. Controles obligatorios (4a)
+
+- [x] Criterios 1–5 con evidencia «cumple»
+- [x] Script sin avisos (0 problemas, con sesión)
+- [x] HTML válido en lo tocado
+- [x] Contraste medido (revisor A+B: 4,61–7,09:1 en textos, 3,64:1 bordes)
+- [x] Textos en alemán con «du»
+- [x] Ninguna decisión del brain contradicha
+- [x] Archivos tocados: todos en `src/` (auth, db, data, api, app, components), `tools/` (admin, capturas, pruebas), `tsconfig.json` (`allowImportingTsExtensions`), `.gitignore` (BD), `CLAUDE.md`, `brain/`, `docs/producto.md`, `tools/estado/datos.json`. Se borró `src/lib/data/json-store.ts`. Las páginas se movieron a `src/app/(app)/` (mismas URL).
+- [x] tsc, lint, build y `npm audit --omit=dev` en verde
+
+No ejecutados: ninguno.
+
+## 11. Decisiones tomadas (4a)
+
+- 04.11.2026 — Ander — D1–D8 según lo recomendado.
+- 04.11.2026 — medio — límite de intentos de inicio de sesión adelantado de la 4b a la 4a (en memoria; la 4b decide si va a la BD) — fábrica
+- 04.11.2026 — medio — comprobación de origen en todos los cambios y cookie `__Host-` — fábrica
+- 04.11.2026 — medio — sección «Kundenkonten» (antes «Verwaltung»), rol «Admin» — fábrica, a propuesta del revisor de idioma
+- 04.11.2026 — bajo — páginas con sesión en el grupo `src/app/(app)/` — fábrica
+- 04.11.2026 — bajo — `demo` solo con `TAX_HELFER_DEMO=1` — fábrica
+
+## 12. Fusión (4a)
+(pendiente de aprobación)

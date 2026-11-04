@@ -56,7 +56,8 @@ if (!loginRes.ok) {
   console.error(`✗ no se pudo iniciar sesión como ${loginEmail} (${loginRes.status}). ¿Faltan los datos de demostración? node tools/admin.mjs demo`);
   process.exit(1);
 }
-const sessionCookie = loginRes.headers.get("set-cookie").split(";")[0].split("=");
+const [cookieName, ...cookieValue] = loginRes.headers.get("set-cookie").split(";")[0].split("=");
+const sessionCookie = [cookieName, cookieValue.join("=")];
 const externas = new Set();
 let problemas = 0;
 
@@ -64,7 +65,8 @@ for (const pagina of paginas) {
   for (const idioma of idiomas) {
   for (const ancho of anchos) {
     const ctx = await browser.newContext({ viewport: { width: ancho, height: 900 }, deviceScaleFactor: 1 });
-    await ctx.addCookies([{ name: sessionCookie[0], value: sessionCookie[1], url: base }]);
+    // Cookie __Host-: Secure y Path=/ explícitos (Chrome los acepta en http://localhost).
+    await ctx.addCookies([{ name: sessionCookie[0], value: sessionCookie[1], domain: new URL(base).hostname, path: "/", secure: true, httpOnly: true, sameSite: "Lax" }]);
     await ctx.addInitScript((l) => { try { localStorage.setItem("ab1web-language-v2", l); } catch {} }, idioma);
     const page = await ctx.newPage();
     page.on("request", (r) => { if (!r.url().startsWith(base) && !r.url().startsWith("data:")) externas.add(r.url().split("?")[0]); });

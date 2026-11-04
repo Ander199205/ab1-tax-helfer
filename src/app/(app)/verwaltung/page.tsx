@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { requireAdmin } from "@/lib/auth/current-user";
 import { listUsers } from "@/lib/auth/users";
 
-export const metadata = { title: "Verwaltung · ab1 Tax Helfer" };
+export const metadata = { title: "Kundenkonten · ab1 Tax Helfer" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
@@ -11,8 +11,8 @@ export default async function AdminPage() {
   return (
     <>
       <PageHeader
-        title="Verwaltung"
-        description="Konten der Kunden: anlegen, deaktivieren, Passwort zurücksetzen. Jedes Konto sieht nur seine eigenen Belege."
+        title="Kundenkonten"
+        description="Kundenkonten anlegen, deaktivieren, Passwort zurücksetzen. Jeder Kunde sieht nur seine eigenen Daten."
       />
       <AccountsView initialAccounts={listUsers()} selfId={admin.id} />
     </>

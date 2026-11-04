@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { userForSession, type User } from "./users.ts";
 
-export const SESSION_COOKIE = "th_session";
+// Prefijo __Host-: el navegador exige Secure, Path=/ y sin Domain, así que un subdominio no puede plantarla.
+export const SESSION_COOKIE = "__Host-th_session";
 
 export async function currentUser(): Promise<User | null> {
   return userForSession((await cookies()).get(SESSION_COOKIE)?.value);

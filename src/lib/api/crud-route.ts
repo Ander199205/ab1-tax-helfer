@@ -26,7 +26,9 @@ const hasErrors = (errors: FieldErrors) => Object.values(errors).some(Boolean);
 
 // Una sola sección crítica para todas las escrituras: las comprobaciones (duplicados, año cerrado,
 // referencias) y la escritura van juntas, así dos peticiones simultáneas no se saltan las reglas.
-// Basta para el prototipo con JSON; en la fase 4 lo sustituyen las restricciones de la base de datos.
+// Sigue haciendo falta con SQLite: entre comprobar y escribir hay `await`, y una transacción de una
+// conexión compartida no puede abarcarlos. Serializa las escrituras de todas las cuentas (suficiente
+// con pocos clientes); no protege frente a otro proceso (tools/admin.mjs).
 let writeChain: Promise<unknown> = Promise.resolve();
 export function exclusive<R>(task: () => Promise<R>): Promise<R> {
   const run = writeChain.catch(() => undefined).then(task);

@@ -13,7 +13,7 @@ Primero uso y prueba internos; después, producto de venta para el mercado alem�
 - Mapa del código: Graphify (skill `/graphify`). Si existe `graphify-out/graph.json`, usar `graphify query "<pregunta>"`, `graphify path "A" "B"` o `graphify explain "X"` antes de buscar o leer archivos; tras cambiar código, `graphify update .` (sin coste de IA). Si no está instalado: `uv tool install graphifyy`. `graphify-out/` no se sube.
 - Controles antes de fusionar: `npx tsc --noEmit`, `npm run lint`, `npm run build` y, con la app en marcha, `node tools/capturas.mjs --url http://localhost:3000 --sin-capturas` con 0 problemas.
 - Tras `npm run build`, reinicia `npm start`: un servidor viejo sirve una versión anterior y da errores 400 en los archivos JS.
-- Datos de demostración: `node tools/admin.mjs demo` (borra la base de datos local y carga 3 cuentas `@beispiel.de`: admin, muster, studio; contraseñas en `tools/admin.mjs`, **solo para local**). Se niega si hay cuentas reales.
+- Datos de demostración: `TAX_HELFER_DEMO=1 node tools/admin.mjs demo` (borra la base de datos local y carga 3 cuentas `@beispiel.de`: admin, muster, studio; contraseñas en `tools/admin.mjs`, **solo para local**). Se niega si hay cuentas reales.
 - Primer administrador real: `node tools/admin.mjs crear-admin <email> "<Nombre>"`; contraseña olvidada: `node tools/admin.mjs restablecer <email>` o «Verwaltung».
 - Pruebas (ejecutan `tools/admin.mjs demo` antes y después): `BASE=http://localhost:3000 node --test tools/pruebas-api.mjs` y `node tools/pruebas-flujos.mjs --url http://localhost:3000`.
 - Ramas `feature/<slug>`; fusión con `git merge --no-ff`. Sin despliegue todavía.
@@ -21,13 +21,14 @@ Primero uso y prueba internos; después, producto de venta para el mercado alem�
 ## Pila (heredada de panel-contenido)
 
 Next.js 15.5.28 (App Router, TS, `src/`), React 19, Tailwind v4 (config en `src/app/globals.css`), shadcn/ui (`new-york`, `neutral`, `lucide-react`; añadir con `npx shadcn@3.3.1 add <c>`), sonner, `cn` (de shadcn-ui). **Node ≥ 22.18** (las pruebas importan `.ts` directamente).
-Datos en SQLite (`node:sqlite`, `data/app.db`, fuera de git) detrás de `Repository<T>`: `repositorio(ownerId)` solo ve los documentos de esa cuenta. Sesiones en la base de datos (cookie `th_session`, `HttpOnly`, `Secure`, `SameSite=Lax`); contraseñas con scrypt.
+Datos en SQLite (`node:sqlite`, `data/app.db`, fuera de git) detrás de `Repository<T>`: `repositorio(ownerId)` solo ve los documentos de esa cuenta. Sesiones en la base de datos (cookie `__Host-th_session`, `HttpOnly`, `Secure`, `SameSite=Lax`); contraseñas con scrypt asíncrono (N=2^17). `src/middleware.ts`: todo cambio por la API debe venir de la propia app, y `no-store`; las subidas quedan fuera (Next recorta a 10 MB lo que pasa por el middleware) y comprueban el origen en su manejador.
+- En local, usar Chrome o Firefox (Safari antiguo no guarda cookies `Secure` en http://localhost). En producción, siempre HTTPS.
 
 ## Mapa
 
 ```
 src/app/(app)/      todo lo que necesita sesión (layout con requireUser): page.tsx (Übersicht) · steuerjahre/ · belege/ ·
-                    kategorien/ · export/ (provisional) · konto/ · verwaltung/ (solo admin) · loading.tsx · error.tsx
+                    kategorien/ · export/ (provisional) · konto/ · verwaltung/ («Kundenkonten», solo admin) · loading.tsx · error.tsx
 src/app/anmelden/   inicio de sesión (fuera del grupo) · src/app/api/{tax-years,receipts,categories,auth,admin}
 src/lib/db/database.ts  conexión SQLite y esquema (users, sessions, documents)
 src/lib/auth/       password.ts (scrypt) · users.ts (cuentas y sesiones) · current-user.ts (cookie, requireUser) · handlers.ts · admin-handlers.ts

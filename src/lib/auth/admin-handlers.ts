@@ -43,7 +43,7 @@ export async function createAccount(request: Request) {
   else if (emailTaken(email)) errors.email = "Für diese E-Mail gibt es schon ein Konto.";
   if (Object.keys(errors).length) return invalid(errors);
   const password = generatePassword();
-  const user = createUser({ name, email, password, role: "client" });
+  const user = await createUser({ name, email, password, role: "client" });
   return NextResponse.json({ user, password }, { status: 201 });
 }
 
@@ -62,7 +62,7 @@ export async function updateAccount(request: Request, id: string) {
   if (typeof b.active === "boolean") setActive(target.id, b.active);
   if (b.resetPassword === true) {
     password = generatePassword();
-    setPassword(target.id, password);
+    await setPassword(target.id, password);
   }
   return NextResponse.json({ user: findUser(target.id), ...(password ? { password } : {}) });
 }

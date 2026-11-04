@@ -8,6 +8,7 @@ import { isClosed } from "@/lib/tax-years/rules";
 import type { ReceiptFile, ReceiptInput } from "@/lib/types";
 import { currentUser, unauthorized } from "@/lib/auth/current-user";
 import { exclusive } from "./crud-route";
+import { CROSS_SITE_ERROR, isCrossSite } from "./origin";
 import { closedMessage, findYear } from "./handlers";
 
 const NOT_FOUND = () => NextResponse.json({ error: "Beleg oder Datei nicht gefunden." }, { status: 404 });
@@ -20,6 +21,7 @@ const withFiles = (files: ReceiptFile[]) => ({ files }) as unknown as Partial<Re
 const MAX_BODY_BYTES = MAX_FILES * MAX_FILE_BYTES + 1024 * 1024;
 
 export async function uploadFiles(request: Request, receiptId: string) {
+  if (isCrossSite(request)) return NextResponse.json(CROSS_SITE_ERROR, { status: 403 });
   const user = await currentUser();
   if (!user) return unauthorized();
   const receipts = receiptsRepository(user.id);
@@ -99,7 +101,8 @@ export async function serveFile(receiptId: string, fileId: string) {
   });
 }
 
-export async function removeFile(receiptId: string, fileId: string) {
+export async function removeFile(request: Request, receiptId: string, fileId: string) {
+  if (isCrossSite(request)) return NextResponse.json(CROSS_SITE_ERROR, { status: 403 });
   const user = await currentUser();
   if (!user) return unauthorized();
   const receipts = receiptsRepository(user.id);

@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy, KeyRound, Plus } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/layout/empty-state";
 import { FieldWarning } from "@/components/layout/field-warning";
@@ -36,6 +36,8 @@ export function AccountsView({ initialAccounts, selfId }: { initialAccounts: Acc
   // `open` aparte de `shown`: al cerrar, el contenido se queda hasta el final de la animación.
   const [shown, setShownState] = useState<{ account: Account; password: string; reason: "neu" | "reset" } | null>(null);
   const [open, setOpen] = useState(false);
+  // Al cerrar el diálogo, el foco vuelve a quien lo abrió (WCAG 2.4.3); en el alta, al campo del nombre.
+  const opener = useRef<HTMLElement | null>(null);
   const setShown = (value: typeof shown) => {
     if (value) setShownState(value);
     setOpen(Boolean(value));
@@ -45,7 +47,9 @@ export function AccountsView({ initialAccounts, selfId }: { initialAccounts: Acc
 
   async function create(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
     const formEl = event.currentTarget;
+    opener.current = formEl.querySelector<HTMLInputElement>("#acc-name");
     const form = new FormData(formEl);
     setBusy(true);
     const res = await post("/api/admin/users", "POST", { name: form.get("name"), email: form.get("email") });
@@ -61,12 +65,17 @@ export function AccountsView({ initialAccounts, selfId }: { initialAccounts: Acc
     setShown({ account: res.body.user, password: res.body.password, reason: "neu" });
   }
 
-  async function change(account: Account, patch: { active?: boolean; resetPassword?: true }) {
+  const [pending, setPending] = useState<string | null>(null);
+  async function change(account: Account, patch: { active?: boolean; resetPassword?: true }, button: HTMLElement) {
+    if (pending) return;
+    opener.current = button;
+    setPending(account.id);
     const res = await post(`/api/admin/users/${account.id}`, "PATCH", patch);
+    setPending(null);
     if (!res.ok) return toast.error(res.body.error ?? "Das hat nicht geklappt.");
     replace(res.body.user);
     if (res.body.password) setShown({ account: res.body.user, password: res.body.password, reason: "reset" });
-    else toast.success(patch.active ? "Konto aktiviert." : "Konto deaktiviert. Offene Sitzungen sind beendet.");
+    else toast.success(patch.active ? "Konto aktiviert." : "Konto deaktiviert. Es ist jetzt überall abgemeldet.");
   }
 
   async function copy(text: string) {
@@ -74,7 +83,7 @@ export function AccountsView({ initialAccounts, selfId }: { initialAccounts: Acc
       await navigator.clipboard.writeText(text);
       toast.success("Kopiert.");
     } catch {
-      toast.error("Kopieren ging nicht. Markier das Passwort und kopier es von Hand.");
+      toast.error("Kopieren hat nicht geklappt. Markier das Passwort und kopier es von Hand.");
     }
   }
 
@@ -82,7 +91,7 @@ export function AccountsView({ initialAccounts, selfId }: { initialAccounts: Acc
     <div className="space-y-6">
       <form onSubmit={create} noValidate className="flex max-w-3xl flex-wrap items-end gap-3">
         <div className="min-w-48 flex-1 space-y-1.5">
-          <Label htmlFor="acc-name">Name des Kunden</Label>
+          <Label htmlFor="acc-name">Name (Firma oder Person)</Label>
           <Input id="acc-name" name="name" placeholder="z. B. Bäckerei Krüger" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? "acc-name-error" : undefined} />
         </div>
         <div className="min-w-56 flex-1 space-y-1.5">
@@ -107,16 +116,17 @@ export function AccountsView({ initialAccounts, selfId }: { initialAccounts: Acc
           <CardContent className="px-0">
             <ul className="divide-y" aria-label="Konten">
               {accounts.map((a) => (
-                <li key={a.id} data-row className="flex flex-wrap items-center gap-3 px-4 py-3">
-                  <div className="min-w-0 flex-1">
+                <li key={a.id} data-row className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+                  {/* El texto ocupa la fila entera hasta 1024 px; las acciones van debajo (revisión A). */}
+                  <div className="min-w-0 basis-full lg:basis-auto lg:flex-1">
                     <p className="font-medium">
                       {a.name} {a.id === selfId && <span className="text-xs font-normal text-muted-foreground">(du)</span>}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {a.email} · seit {formatDay(a.createdAt.slice(0, 10))}
+                    <p className="text-xs break-all text-muted-foreground">
+                      {a.email} · angelegt am {formatDay(a.createdAt.slice(0, 10))}
                     </p>
                   </div>
-                  <Badge variant="outline">{a.role === "admin" ? "Verwaltung" : "Kunde"}</Badge>
+                  <Badge variant="outline">{a.role === "admin" ? "Admin" : "Kunde"}</Badge>
                   {!a.active && (
                     <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-900">
                       Deaktiviert
@@ -124,10 +134,10 @@ export function AccountsView({ initialAccounts, selfId }: { initialAccounts: Acc
                   )}
                   {a.id !== selfId && (
                     <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" onClick={() => change(a, { resetPassword: true })} aria-label={`Passwort von ${a.name} zurücksetzen`}>
+                      <Button size="sm" variant="outline" aria-disabled={pending === a.id} onClick={(e) => change(a, { resetPassword: true }, e.currentTarget)} aria-label={`Passwort von ${a.name} zurücksetzen`}>
                         <KeyRound /> Passwort zurücksetzen
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => change(a, { active: !a.active })} aria-label={`${a.name} ${a.active ? "deaktivieren" : "aktivieren"}`}>
+                      <Button size="sm" variant="outline" aria-disabled={pending === a.id} onClick={(e) => change(a, { active: !a.active }, e.currentTarget)} aria-label={`Konto von ${a.name} ${a.active ? "deaktivieren" : "aktivieren"}`}>
                         {a.active ? "Deaktivieren" : "Aktivieren"}
                       </Button>
                     </div>
@@ -140,11 +150,19 @@ export function AccountsView({ initialAccounts, selfId }: { initialAccounts: Acc
       )}
 
       <Dialog open={open} onOpenChange={(next) => !next && setShown(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent
+          className="sm:max-w-md"
+          onCloseAutoFocus={(e) => {
+            if (opener.current?.isConnected) {
+              e.preventDefault();
+              opener.current.focus();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{shown?.reason === "neu" ? "Konto angelegt" : "Passwort zurückgesetzt"}</DialogTitle>
             <DialogDescription>
-              Gib {shown?.account.name} dieses Passwort auf einem sicheren Weg weiter. Es wird nur jetzt angezeigt.
+              Gib das Passwort auf einem sicheren Weg an {shown?.account.name} weiter. Es wird nur dieses eine Mal angezeigt.
             </DialogDescription>
           </DialogHeader>
           {shown && (

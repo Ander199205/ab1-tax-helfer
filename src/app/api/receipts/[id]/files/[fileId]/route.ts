@@ -9,7 +9,7 @@ export async function GET(_request: Request, { params }: Context) {
   return serveFile(id, fileId);
 }
 
-export async function DELETE(_request: Request, { params }: Context) {
+export async function DELETE(request: Request, { params }: Context) {
   const { id, fileId } = await params;
-  return removeFile(id, fileId);
+  return removeFile(request, id, fileId);
 }

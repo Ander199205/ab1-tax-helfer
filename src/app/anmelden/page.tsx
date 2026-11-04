@@ -23,11 +23,11 @@ export default async function LoginPage() {
           <h1 id="page-title" tabIndex={-1} className="text-2xl font-semibold tracking-tight outline-none">
             Anmelden
           </h1>
-          <p className="text-sm text-muted-foreground">Mit dem Zugang, den du von uns bekommen hast.</p>
+          <p className="text-sm text-muted-foreground">Melde dich mit dem Zugang an, den du von uns bekommen hast.</p>
         </div>
         <LoginForm />
         <p className="text-xs text-muted-foreground">
-          Passwort vergessen? Melde dich bei uns, wir setzen es zurück.
+          Passwort vergessen? Schreib uns kurz, dann setzen wir es zurück.
         </p>
       </div>
     </main>

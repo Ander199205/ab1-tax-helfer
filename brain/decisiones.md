@@ -17,3 +17,6 @@
 - 2026-11-04 — Renombrar una categoría está permitido aunque la usen justificantes de un año cerrado: el nombre es solo para ordenar. (Ander, hallazgo D13 de la fase 2)
 - 2026-11-04 — Fase 3: hasta 5 archivos por Beleg (PDF, JPG, PNG, WebP; 10 MB), tipo comprobado por bytes, archivos en `data/uploads/` con nombre UUID; fotos en la app y PDF en pestaña nueva; «Datei fehlt» + filtro + recuento enlazado. (Ander)
 - 2026-11-04 — «Datei fehlt» usa el mismo ámbar que «übergeben»: los dos piden una acción pendiente.
+- 2026-11-04 — Fase 4: SQLite (`node:sqlite`, aviso «experimental» aceptado; probar en cada actualización de Node), correo y contraseña propios (scrypt N=2^17), solo el admin crea cuentas y restablece contraseñas, AES-256-GCM en la app y ClamAV (4b), servidor en Alemania, sesión 8 h / 30 días. (Ander)
+- 2026-11-04 — Administración de clientes: sección «Kundenkonten» (`/verwaltung`), rol «Admin».
+- 2026-11-04 — Todo cambio por la API debe venir de la propia app (`Sec-Fetch-Site`/`Origin`); cookie `__Host-th_session`; API con `Cache-Control: no-store`.

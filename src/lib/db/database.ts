@@ -43,12 +43,23 @@ CREATE TABLE IF NOT EXISTS documents (
   data       TEXT NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  PRIMARY KEY (collection, id)
+  PRIMARY KEY (owner_id, collection, id)  -- el id solo tiene que ser único dentro de cada cuenta
 );
 CREATE INDEX IF NOT EXISTS documents_owner ON documents(collection, owner_id);
 `;
 
 let db: Database | null = null;
+let depth = 0;
+
+/** Bases de datos de antes de la revisión 4a: la clave de `documents` no incluía owner_id. Sin datos reales aún. */
+function migrateDocumentsKey(conn: Database) {
+  const cols = conn.prepare("PRAGMA table_info(documents)").all();
+  const ownerInKey = cols.some((c) => c.name === "owner_id" && Number(c.pk) > 0);
+  if (cols.length === 0 || ownerInKey) return;
+  conn.exec("ALTER TABLE documents RENAME TO documents_old; DROP INDEX IF EXISTS documents_owner;");
+  conn.exec(SCHEMA);
+  conn.exec("INSERT INTO documents SELECT collection, id, owner_id, data, created_at, updated_at FROM documents_old; DROP TABLE documents_old;");
+}
 
 export const databaseFile = () => process.env.TAX_HELFER_DB ?? path.join(process.cwd(), "data", "app.db");
 
@@ -56,21 +67,30 @@ export function getDb(): Database {
   if (db) return db;
   const sqlite = process.getBuiltinModule("node:sqlite") as unknown as { DatabaseSync: new (file: string) => Database };
   db = new sqlite.DatabaseSync(databaseFile());
-  db.exec("PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000; PRAGMA foreign_keys = ON;");
+  // busy_timeout corto: DatabaseSync bloquea el proceso mientras espera (p. ej. si tools/admin.mjs escribe).
+  db.exec("PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 1000; PRAGMA foreign_keys = ON;");
+  migrateDocumentsKey(db);
   db.exec(SCHEMA);
   return db;
 }
 
-/** Ejecuta `fn` en una transacción (todo o nada). */
-export function transaction<R>(fn: (db: Database) => R): R {
+/**
+ * Ejecuta `fn` en una transacción (todo o nada). `fn` tiene que ser síncrona: con un `await` dentro, el
+ * COMMIT llegaría antes de tiempo. Dentro de otra transacción usa un SAVEPOINT.
+ */
+export function transaction<R>(fn: (db: Database) => R extends Promise<unknown> ? never : R): R {
   const conn = getDb();
-  conn.exec("BEGIN IMMEDIATE");
+  const savepoint = `sp${depth}`;
+  conn.exec(depth === 0 ? "BEGIN IMMEDIATE" : `SAVEPOINT ${savepoint}`);
+  depth++;
   try {
-    const result = fn(conn);
-    conn.exec("COMMIT");
+    const result = fn(conn) as R;
+    depth--;
+    conn.exec(depth === 0 ? "COMMIT" : `RELEASE ${savepoint}`);
     return result;
   } catch (error) {
-    conn.exec("ROLLBACK");
+    depth--;
+    conn.exec(depth === 0 ? "ROLLBACK" : `ROLLBACK TO ${savepoint}`);
     throw error;
   }
 }
