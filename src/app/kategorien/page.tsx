@@ -15,7 +15,7 @@ export default async function CategoriesPage() {
     <>
       <PageHeader
         title="Kategorien"
-        description="Eigene Kategorien, um Belege übersichtlich zu ordnen. Sie dienen nur der Ordnung, nicht der steuerlichen Einordnung."
+        description="Eigene Kategorien, um Belege übersichtlich zu ordnen. Die fachliche Zuordnung übernimmt deine Steuerberatung."
       />
       <CategoriesView initialCategories={categories} usage={usage} />
     </>

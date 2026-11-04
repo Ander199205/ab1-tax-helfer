@@ -32,7 +32,7 @@ export function ConfirmDelete({ title, description, onConfirm, children }: Confi
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-destructive text-white hover:bg-destructive/90">
+          <AlertDialogAction onClick={onConfirm} variant="destructive">
             Löschen
           </AlertDialogAction>
         </AlertDialogFooter>

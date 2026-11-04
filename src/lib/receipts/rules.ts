@@ -8,7 +8,11 @@ export type ReceiptErrors = Partial<Record<keyof ReceiptInput, string>>;
 
 export function validateReceipt(input: ReceiptInput, today = new Date()): ReceiptErrors {
   const errors: ReceiptErrors = {};
-  if (!isValidDay(input.date)) errors.date = "Gib ein gültiges Datum ein.";
+  const dateYear = isValidDay(input.date) ? Number(input.date.slice(0, 4)) : null;
+  if (dateYear === null) errors.date = "Gib ein gültiges Datum ein.";
+  else if (dateYear < MIN_YEAR || dateYear > maxYear(today)) {
+    errors.date = `Das Datum muss zwischen ${MIN_YEAR} und ${maxYear(today)} liegen.`;
+  }
   if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) {
     errors.amountCents = "Gib einen Betrag größer als 0 ein, z. B. 1.234,56.";
   } else if (input.amountCents > MAX_AMOUNT_CENTS) {

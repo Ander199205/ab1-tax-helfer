@@ -2,55 +2,55 @@
   {
     "id": "kat-buero",
     "name": "Büro & Material",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "kat-software",
     "name": "Software & Abos",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "kat-fahrten",
     "name": "Fahrten & Reisen",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "kat-telefon",
     "name": "Telefon & Internet",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "kat-fortbildung",
     "name": "Fortbildung",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "kat-versicherungen",
     "name": "Versicherungen",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "kat-bank",
     "name": "Bank & Gebühren",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "kat-einnahmen",
     "name": "Einnahmen",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "kat-sonstiges",
     "name": "Sonstiges",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   }
 ]

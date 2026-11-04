@@ -64,10 +64,12 @@ for (const width of [375, 1440]) {
     await page.getByLabel("Neuer Name für Werkzeug").fill("Werkzeug & Geräte");
     await page.keyboard.press("Enter");
     await visible(page.getByText("Werkzeug & Geräte", { exact: true }));
+    // El foco vuelve al botón de renombrar de esa fila
+    await page.waitForFunction(() => document.activeElement?.getAttribute("aria-label") === "„Werkzeug & Geräte“ umbenennen");
   });
   await step("Kategorie mit Belegen lässt sich nicht löschen", async () => {
     const b = page.getByRole("button", { name: /„Büro & Material“ kann nicht gelöscht werden/ });
-    if (!(await b.isDisabled())) throw new Error("el botón no está desactivado");
+    if ((await b.getAttribute("aria-disabled")) !== "true") throw new Error("el botón no está marcado como desactivado");
   });
   await shot("kategorien");
   await step("Kategorie löschen", async () => {
@@ -123,8 +125,12 @@ for (const width of [375, 1440]) {
     await dialog.getByLabel("Betrag in €").fill("1,234.56");
     await dialog.getByRole("button", { name: "Beleg speichern" }).click();
     await visible(dialog.getByText("Schreib den Betrag wie 1.234,56"));
-    await dialog.getByRole("button", { name: "Abbrechen" }).click();
+    if ((await page.evaluate(() => document.activeElement?.id)) !== "receipt-date" &&
+        (await page.evaluate(() => document.activeElement?.getAttribute("aria-invalid"))) !== "true")
+      throw new Error("el foco no va al primer campo con error");
+    await page.keyboard.press("Escape");
     await gone(page.getByRole("dialog"));
+    await page.waitForFunction(() => document.activeElement?.textContent?.includes("Neuer Beleg"));
   });
   await step("neuer Beleg mit 1.234,56 (Jahr folgt dem Datum)", async () => {
     await page.getByRole("button", { name: "Neuer Beleg" }).click();
@@ -150,7 +156,7 @@ for (const width of [375, 1440]) {
     await page.getByLabel("Art", { exact: true }).selectOption("einnahme");
     await gone(list.getByText("Testfirma Müller"));
     await page.getByLabel("Kategorie", { exact: true }).selectOption({ label: "Büro & Material" });
-    await visible(page.getByText("Keine Belege für diese Auswahl."));
+    await visible(page.getByRole("status").getByText("Keine Belege für diese Auswahl."));
     await shot("belege-leer");
     await page.getByRole("button", { name: "Filter zurücksetzen" }).first().click();
     await visible(list.getByText("Testfirma Müller"));

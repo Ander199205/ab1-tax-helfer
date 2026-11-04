@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/layout/empty-state";
 import { FieldWarning } from "@/components/layout/field-warning";
 import { NativeSelect } from "@/components/layout/native-select";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { taxYearsApi } from "@/lib/api/clients";
@@ -37,6 +37,7 @@ export function TaxYearsView({ initialYears, counts }: TaxYearsViewProps) {
   });
   const [newYear, setNewYear] = useState(String(suggestedYear(initialYears)));
   const [error, setError] = useState<string>();
+  const [saving, setSaving] = useState(false);
 
   async function handleCreate(event: React.FormEvent) {
     event.preventDefault();
@@ -45,7 +46,9 @@ export function TaxYearsView({ initialYears, counts }: TaxYearsViewProps) {
     if (local) return setError(local);
     if (items.some((y) => y.year === year)) return setError(`Das Steuerjahr ${year} gibt es schon.`);
     // Sin `checklist`: el servidor pone la lista inicial (decisión D5).
+    setSaving(true);
     const result = await create({ year } as TaxYearInput);
+    setSaving(false);
     if (result) return setError(result.year);
     setError(undefined);
     setNewYear(String(Math.min(year + 1, maxYear())));
@@ -73,8 +76,8 @@ export function TaxYearsView({ initialYears, counts }: TaxYearsViewProps) {
             aria-describedby={error ? "new-year-error" : undefined}
           />
         </div>
-        <Button type="submit">
-          <Plus /> Anlegen
+        <Button type="submit" disabled={saving}>
+          <Plus /> {saving ? "Wird angelegt …" : "Anlegen"}
         </Button>
         {error && (
           <div className="basis-full">
@@ -136,7 +139,7 @@ function YearCard({ year, count, onUpdate, onRemove }: YearCardProps) {
     <Card>
       <CardHeader className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1.5">
-          <CardTitle className="text-lg">Steuerjahr {year.year}</CardTitle>
+          <h2 className="text-lg leading-none font-semibold">Steuerjahr {year.year}</h2>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <StatusBadge status={year.status} />
             <Link href={`/belege?jahr=${year.year}`} className="inline-flex min-h-6 items-center underline-offset-4 hover:underline">
@@ -214,7 +217,7 @@ function YearCard({ year, count, onUpdate, onRemove }: YearCardProps) {
                 id={`new-item-${year.id}`}
                 value={newItem}
                 maxLength={120}
-                placeholder="Neuer Punkt, z. B. Fahrtenbuch"
+                placeholder="z. B. Fahrtenbuch"
                 className="min-w-40 flex-1"
                 onChange={(e) => setNewItem(e.target.value)}
               />
@@ -231,7 +234,7 @@ function YearCard({ year, count, onUpdate, onRemove }: YearCardProps) {
           ) : (
             <ConfirmDelete
               title={`Steuerjahr ${year.year} löschen?`}
-              description="Das Jahr und seine Liste werden endgültig gelöscht."
+              description="Das Jahr und seine Checkliste „Was fehlt noch?“ werden endgültig gelöscht."
               onConfirm={onRemove}
             >
               <Button variant="ghost" size="sm" className="text-destructive">

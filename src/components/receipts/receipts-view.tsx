@@ -2,7 +2,7 @@
 
 import { Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ConfirmDelete } from "@/components/layout/confirm-delete";
 import { EmptyState } from "@/components/layout/empty-state";
 import { NativeSelect } from "@/components/layout/native-select";
@@ -39,7 +39,13 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
   const [yearFilter, setYearFilter] = useState(initialYear);
   const [categoryFilter, setCategoryFilter] = useState(ALL);
   const [kindFilter, setKindFilter] = useState(ALL);
-  const [dialog, setDialog] = useState<{ mode: "new" } | { mode: "edit"; receipt: Receipt } | null>(null);
+  const [dialog, setDialogState] = useState<{ mode: "new" } | { mode: "edit"; receipt: Receipt } | null>(null);
+  // El diálogo se abre sin DialogTrigger: al cerrarlo, el foco vuelve al botón que lo abrió (WCAG 2.4.3).
+  const opener = useRef<HTMLElement | null>(null);
+  const setDialog = (next: typeof dialog) => {
+    if (next) opener.current = document.activeElement as HTMLElement | null;
+    setDialogState(next);
+  };
 
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? "–";
   const closedYears = new Set(years.filter(isClosed).map((y) => y.year));
@@ -163,8 +169,35 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
         </p>
       )}
 
+      {/* Región fija: anuncia el resultado de los filtros también cuando queda vacío (WCAG 4.1.3). */}
+      <p role="status" className="text-sm text-muted-foreground">
+        {filtered.length === 0 ? (
+          items.length === 0 ? (
+            "Noch keine Belege."
+          ) : (
+            "Keine Belege für diese Auswahl."
+          )
+        ) : (
+          <>
+            <span className="whitespace-nowrap">{sum.count === 1 ? "1 Beleg" : `${sum.count} Belege`}</span>
+            {" · "}
+            <span className="whitespace-nowrap">Ausgaben {formatAmount(sum.expenses)}</span>
+            {" · "}
+            <span className="whitespace-nowrap">Einnahmen {formatAmount(sum.income)}</span>
+          </>
+        )}
+      </p>
+
       {items.length === 0 ? (
-        <EmptyState>Noch keine Belege. Leg mit „Neuer Beleg“ den ersten an.</EmptyState>
+        <EmptyState
+          action={
+            <Button disabled={!canCreate} onClick={() => setDialog({ mode: "new" })}>
+              <Plus /> Ersten Beleg anlegen
+            </Button>
+          }
+        >
+          Noch keine Belege.
+        </EmptyState>
       ) : filtered.length === 0 ? (
         <EmptyState
           action={
@@ -177,18 +210,11 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
         </EmptyState>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground" aria-live="polite">
-            {sum.count === 1 ? "1 Beleg" : `${sum.count} Belege`} · Ausgaben {formatAmount(sum.expenses)} · Einnahmen{" "}
-            {formatAmount(sum.income)}
-            {filtersActive && (
-              <>
-                {" · "}
-                <button type="button" className="underline underline-offset-4" onClick={resetFilters}>
-                  Filter zurücksetzen
-                </button>
-              </>
-            )}
-          </p>
+          {filtersActive && (
+            <Button variant="link" className="h-auto px-0" onClick={resetFilters}>
+              Filter zurücksetzen
+            </Button>
+          )}
 
           {/* Pantallas anchas (≥ 1280 px): tabla. Por debajo no cabe junto a la barra lateral. */}
           <Card className="hidden py-0 xl:block">
@@ -198,7 +224,7 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
                 <thead className="border-b text-left text-xs text-muted-foreground">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-medium">Datum</th>
-                    <th scope="col" className="px-4 py-3 font-medium">Von / an</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Von / An</th>
                     <th scope="col" className="px-4 py-3 font-medium">Kategorie</th>
                     <th scope="col" className="px-4 py-3 font-medium">Art</th>
                     <th scope="col" className="px-4 py-3 text-right font-medium">Betrag</th>
@@ -258,10 +284,18 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
       )}
 
       <Dialog open={dialog !== null} onOpenChange={(open) => !open && setDialog(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent
+          className="max-h-[90vh] overflow-y-auto sm:max-w-lg"
+          onCloseAutoFocus={(e) => {
+            if (opener.current?.isConnected) {
+              e.preventDefault();
+              opener.current.focus();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{dialog?.mode === "edit" ? "Beleg bearbeiten" : "Neuer Beleg"}</DialogTitle>
-            <DialogDescription>Datum, Betrag und Kategorie reichen. Der Rest ist optional.</DialogDescription>
+            <DialogDescription>Pflicht sind Datum, Betrag, „Von wem?“ bzw. „An wen?“ und Kategorie. Beschreibung und Notiz sind optional.</DialogDescription>
           </DialogHeader>
           {dialog && (
             <ReceiptForm

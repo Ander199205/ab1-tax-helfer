@@ -12,7 +12,9 @@ import { isClosed, validateTaxYear } from "@/lib/tax-years/rules";
 import type { Receipt, TaxYear } from "@/lib/types";
 import { createCrudHandlers } from "./crud-route";
 
-const belege = (n: number) => (n === 1 ? "1 Beleg" : `${n} Belegen`);
+/** «1 Beleg» / «3 Belege» (nominativo) y «1 Beleg» / «3 Belegen» (dativo). */
+const belegeNom = (n: number) => (n === 1 ? "1 Beleg" : `${n} Belege`);
+const belegeDat = (n: number) => (n === 1 ? "1 Beleg" : `${n} Belegen`);
 const closedMessage = (year: number) =>
   `Das Steuerjahr ${year} ist abgeschlossen. Öffne es wieder, um Belege zu ändern.`;
 
@@ -38,14 +40,14 @@ export const taxYearsHandlers = createCrudHandlers({
       return { year: `Das Steuerjahr ${input.year} gibt es schon.` };
     }
     if (current && current.year !== input.year && (await receiptsOfYear(current.year)).length > 0) {
-      return { year: "Das Jahr hat schon Belege und kann nicht mehr geändert werden." };
+      return { year: "Die Jahreszahl lässt sich nicht mehr ändern, weil schon Belege dazugehören." };
     }
     return {};
   },
   beforeRemove: async (year) => {
     const count = (await receiptsOfYear(year.year)).length;
     return count > 0
-      ? `Zum Steuerjahr ${year.year} gehören noch ${belege(count)}. Lösche oder verschiebe sie zuerst.`
+      ? `Zum Steuerjahr ${year.year} ${count === 1 ? "gehört" : "gehören"} noch ${belegeNom(count)}. Lösch oder verschieb sie zuerst.`
       : null;
   },
 });
@@ -63,7 +65,7 @@ export const receiptsHandlers = createCrudHandlers({
   check: async (input) => {
     const categories = await categoriesRepository.list();
     if (!categories.some((c) => c.id === input.categoryId)) return { categoryId: "Diese Kategorie gibt es nicht mehr." };
-    if (!(await findYear(input.year))) return { year: `Lege zuerst das Steuerjahr ${input.year} an.` };
+    if (!(await findYear(input.year))) return { year: `Leg zuerst das Steuerjahr ${input.year} an.` };
     return {};
   },
   beforeRemove: async (receipt) => (isClosed(await findYear(receipt.year)) ? closedMessage(receipt.year) : null),
@@ -77,6 +79,6 @@ export const categoriesHandlers = createCrudHandlers({
   check: async (input, current) => validateCategory(input, await categoriesRepository.list(), current?.id),
   beforeRemove: async (category) => {
     const count = (await receiptsRepository.list()).filter((r) => r.categoryId === category.id).length;
-    return count > 0 ? `„${category.name}“ wird noch von ${belege(count)} verwendet.` : null;
+    return count > 0 ? `„${category.name}“ wird noch von ${belegeDat(count)} verwendet.` : null;
   },
 });

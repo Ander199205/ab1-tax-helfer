@@ -1,8 +1,9 @@
 // Importes en formato alemán. Se guardan en céntimos (enteros) para no arrastrar errores de redondeo.
 // Sin imports: se prueba directamente con `node --test` (tools/pruebas-api.mjs).
 
-const GROUPED = /^\d{1,3}(\.\d{3})+(,\d{1,2})?$/; // 1.234 · 1.234,5 · 12.345.678,90
-const PLAIN = /^\d+(,\d{1,2})?$/; // 1234 · 1234,56 · 0,5
+// Sin ceros a la izquierda: «0.500» no puede colarse como 500,00 € (fase 2, revisión D/E).
+const GROUPED = /^[1-9]\d{0,2}(\.\d{3}){1,2}(,\d{1,2})?$/; // 1.234 · 1.234,5 · 9.999.999,99
+const PLAIN = /^(0|[1-9]\d{0,6})(,\d{1,2})?$/; // 1234 · 1234,56 · 0,5 (hasta 7 cifras)
 
 /**
  * Convierte un importe escrito a la alemana en céntimos, o null si no es válido.
@@ -10,7 +11,8 @@ const PLAIN = /^\d+(,\d{1,2})?$/; // 1234 · 1234,56 · 0,5
  * Rechaza el formato inglés («1,234.56»), más de dos decimales («12,345») y texto.
  */
 export function parseAmount(text: string): number | null {
-  const value = text.replace(/€/g, "").replace(/\s/g, "");
+  // Solo se quitan espacios alrededor y un «€» final; «1 2 3» o «5€€» no son importes.
+  const value = text.trim().replace(/\s*€$/, "").trim();
   if (!GROUPED.test(value) && !PLAIN.test(value)) return null;
   const [whole, decimals = ""] = value.replace(/\./g, "").split(",");
   return Number(whole) * 100 + Number(decimals.padEnd(2, "0"));

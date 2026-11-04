@@ -9,7 +9,7 @@ function parseChecklist(value: unknown): ChecklistItem[] | null {
   for (const raw of value) {
     if (!raw || typeof raw !== "object") return null;
     const r = raw as Record<string, unknown>;
-    if (typeof r.title !== "string") return null;
+    if (typeof r.title !== "string" || (r.done !== undefined && typeof r.done !== "boolean")) return null;
     items.push({ id: typeof r.id === "string" && r.id ? r.id : newId(), title: r.title.trim(), done: r.done === true });
   }
   return items;

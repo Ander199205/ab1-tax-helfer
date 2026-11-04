@@ -18,6 +18,8 @@ export function validateTaxYear(input: TaxYearInput, today = new Date()): TaxYea
   if (input.checklist.length > 50) errors.checklist = "Höchstens 50 Punkte pro Jahr.";
   else if (input.checklist.some((i) => !i.title.trim() || i.title.length > 120)) {
     errors.checklist = "Jeder Punkt braucht einen Text mit höchstens 120 Zeichen.";
+  } else if (new Set(input.checklist.map((i) => i.id)).size !== input.checklist.length) {
+    errors.checklist = "Ein Punkt ist doppelt vorhanden.";
   }
   return errors;
 }

@@ -9,8 +9,8 @@
     "categoryId": "kat-buero",
     "year": 2025,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-02",
@@ -22,8 +22,8 @@
     "categoryId": "kat-software",
     "year": 2025,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-03",
@@ -35,8 +35,8 @@
     "categoryId": "kat-fahrten",
     "year": 2025,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-04",
@@ -48,8 +48,8 @@
     "categoryId": "kat-telefon",
     "year": 2025,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-05",
@@ -61,8 +61,8 @@
     "categoryId": "kat-einnahmen",
     "year": 2025,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-06",
@@ -74,8 +74,8 @@
     "categoryId": "kat-fortbildung",
     "year": 2025,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-07",
@@ -87,8 +87,8 @@
     "categoryId": "kat-versicherungen",
     "year": 2025,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-08",
@@ -100,8 +100,8 @@
     "categoryId": "kat-einnahmen",
     "year": 2025,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-09",
@@ -113,8 +113,8 @@
     "categoryId": "kat-bank",
     "year": 2025,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-10",
@@ -125,9 +125,9 @@
     "description": "Visitenkarten und Flyer",
     "categoryId": "kat-sonstiges",
     "year": 2026,
-    "note": "Rechnung kam erst im Januar 2026.",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "note": "Im Januar 2026 bezahlt.",
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-11",
@@ -139,8 +139,8 @@
     "categoryId": "kat-software",
     "year": 2026,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-12",
@@ -152,8 +152,8 @@
     "categoryId": "kat-buero",
     "year": 2026,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-13",
@@ -165,8 +165,8 @@
     "categoryId": "kat-einnahmen",
     "year": 2026,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-14",
@@ -178,8 +178,8 @@
     "categoryId": "kat-fahrten",
     "year": 2026,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-15",
@@ -191,8 +191,8 @@
     "categoryId": "kat-telefon",
     "year": 2026,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-16",
@@ -204,8 +204,8 @@
     "categoryId": "kat-einnahmen",
     "year": 2026,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-17",
@@ -217,8 +217,8 @@
     "categoryId": "kat-fortbildung",
     "year": 2026,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-18",
@@ -230,8 +230,8 @@
     "categoryId": "kat-versicherungen",
     "year": 2026,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-19",
@@ -243,8 +243,8 @@
     "categoryId": "kat-bank",
     "year": 2026,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   },
   {
     "id": "beleg-20",
@@ -256,7 +256,7 @@
     "categoryId": "kat-einnahmen",
     "year": 2026,
     "note": "",
-    "createdAt": "2026-11-04T09:00:00.000Z",
-    "updatedAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
   }
 ]

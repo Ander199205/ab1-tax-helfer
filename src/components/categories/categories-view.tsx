@@ -33,12 +33,21 @@ export function CategoriesView({ initialCategories, usage }: CategoriesViewProps
   const [editing, setEditing] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editError, setEditError] = useState<string>();
+  const [saving, setSaving] = useState(false);
+
+  /** Cierra el renombrado y devuelve el foco al botón de esa fila (WCAG 2.4.3). */
+  const stopEditing = (id: string) => {
+    setEditing(null);
+    requestAnimationFrame(() => document.getElementById(`rename-button-${id}`)?.focus());
+  };
 
   async function handleCreate(event: React.FormEvent) {
     event.preventDefault();
     const local = validateCategory({ name }, items).name;
     if (local) return setError(local);
+    setSaving(true);
     const result = await create({ name: name.trim() });
+    setSaving(false);
     if (result) return setError(result.name);
     setName("");
     setError(undefined);
@@ -47,9 +56,11 @@ export function CategoriesView({ initialCategories, usage }: CategoriesViewProps
   async function handleRename(category: Category) {
     const local = validateCategory({ name: editName }, items, category.id).name;
     if (local) return setEditError(local);
+    setSaving(true);
     const result = await update(category.id, { name: editName.trim() });
+    setSaving(false);
     if (result) return setEditError(result.name);
-    setEditing(null);
+    stopEditing(category.id);
   }
 
   return (
@@ -69,7 +80,9 @@ export function CategoriesView({ initialCategories, usage }: CategoriesViewProps
             aria-describedby={error ? "category-name-error" : undefined}
           />
         </div>
-        <Button type="submit">Anlegen</Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? "Wird angelegt …" : "Anlegen"}
+        </Button>
         {error && (
           <div className="basis-full">
             <FieldWarning id="category-name-error">{error}</FieldWarning>
@@ -109,10 +122,11 @@ export function CategoriesView({ initialCategories, usage }: CategoriesViewProps
                             setEditName(e.target.value);
                             setEditError(undefined);
                           }}
-                          onKeyDown={(e) => e.key === "Escape" && setEditing(null)}
+                          onKeyDown={(e) => e.key === "Escape" && stopEditing(category.id)}
                           aria-invalid={Boolean(editError)}
+                          aria-describedby={editError ? `rename-${category.id}-error` : undefined}
                         />
-                        <Button type="submit" size="icon" aria-label="Namen speichern">
+                        <Button type="submit" size="icon" aria-label="Namen speichern" disabled={saving}>
                           <Check />
                         </Button>
                         <Button
@@ -120,13 +134,13 @@ export function CategoriesView({ initialCategories, usage }: CategoriesViewProps
                           size="icon"
                           variant="outline"
                           aria-label="Umbenennen abbrechen"
-                          onClick={() => setEditing(null)}
+                          onClick={() => stopEditing(category.id)}
                         >
                           <X />
                         </Button>
                         {editError && (
                           <div className="basis-full">
-                            <FieldWarning>{editError}</FieldWarning>
+                            <FieldWarning id={`rename-${category.id}-error`}>{editError}</FieldWarning>
                           </div>
                         )}
                       </form>
@@ -139,6 +153,7 @@ export function CategoriesView({ initialCategories, usage }: CategoriesViewProps
                           </p>
                         </div>
                         <Button
+                          id={`rename-button-${category.id}`}
                           size="icon"
                           variant="ghost"
                           aria-label={`„${category.name}“ umbenennen`}
@@ -151,12 +166,15 @@ export function CategoriesView({ initialCategories, usage }: CategoriesViewProps
                           <Pencil />
                         </Button>
                         {count > 0 ? (
+                          // aria-disabled (no disabled): sigue siendo enfocable y el teclado llega a la explicación.
                           <Button
                             size="icon"
                             variant="ghost"
-                            disabled
+                            aria-disabled="true"
+                            className="cursor-not-allowed opacity-50"
+                            onClick={(e) => e.preventDefault()}
                             aria-label={`„${category.name}“ kann nicht gelöscht werden, weil noch Belege dazugehören`}
-                            title="Gehören noch Belege dazu, lässt sich die Kategorie nicht löschen."
+                            title="Löschen geht erst, wenn keine Belege mehr dazugehören."
                           >
                             <Trash2 />
                           </Button>

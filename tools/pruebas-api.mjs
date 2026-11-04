@@ -13,11 +13,11 @@ const resetData = () => {
   for (const f of fs.readdirSync("data")) if (f.endsWith(".json")) fs.rmSync(path.join("data", f));
 };
 
-async function api(method, url, body) {
+async function api(method, url, body, { raw, type = "application/json" } = {}) {
   const res = await fetch(BASE + url, {
     method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
+    headers: body !== undefined || raw !== undefined ? { "Content-Type": type } : undefined,
+    body: raw ?? (body !== undefined ? JSON.stringify(body) : undefined),
   });
   const text = await res.text();
   return { status: res.status, body: text ? JSON.parse(text) : null };
@@ -36,12 +36,14 @@ const receipt = (over = {}) => ({
 });
 
 describe("parseAmount (C3)", () => {
-  for (const [text, cents] of [["1.234,56", 123456], ["1234,56", 123456], ["1234", 123400], ["0,5", 50], ["12.345.678,90", 1234567890], [" 19,99 € ", 1999]]) {
+  for (const [text, cents] of [["1.234,56", 123456], ["1234,56", 123456], ["1234", 123400], ["0,5", 50], ["0,05", 5], ["1.000.000", 100000000], ["9.999.999,99", 999999999], [" 19,99 € ", 1999]]) {
     test(`acepta «${text}»`, () => assert.equal(parseAmount(text), cents));
   }
-  for (const text of ["1,234.56", "12,345", "abc", "", "-5", "1.23", "12.34,5"]) {
+  // «0.500» rechazado: con punto decimal inglés se guardaría 500,00 € (revisión D/E).
+  for (const text of ["1,234.56", "12,345", "abc", "", "-5", "1.23", "12.34,5", "0.500", "000.000", "00012,50", "1 2 3", "0,5€€", ",50", "9".repeat(400)]) {
     test(`rechaza «${text}»`, () => assert.equal(parseAmount(text), null));
   }
+  test("«12.345.678,90» se lee bien y lo rechaza el máximo de rules.ts", () => assert.equal(parseAmount("12.345.678,90"), 1234567890));
   test("formatAmount da formato alemán", () => assert.equal(formatAmount(123456).replace(/\s/g, " "), "1.234,56 €"));
 });
 
@@ -85,13 +87,13 @@ describe("API", () => {
     const r = await api("POST", "/api/receipts", receipt({ amountCents: 0, date: "2026-02-30", party: " ", kind: "x" }));
     assert.equal(r.status, 400);
     assert.deepEqual(Object.keys(r.body.errors).sort(), ["amountCents", "date", "kind", "party"]);
-    assert.match(r.body.error, /markierten Felder/);
+    assert.match(r.body.error, /Bitte prüf die markierten Felder/);
     const decimals = await api("POST", "/api/receipts", receipt({ amountCents: 12.5 }));
     assert.equal(decimals.status, 400);
     const cat = await api("POST", "/api/receipts", receipt({ categoryId: "no-existe" }));
     assert.match(cat.body.errors.categoryId, /gibt es nicht mehr/);
     const year = await api("POST", "/api/receipts", receipt({ year: 2023, date: "2023-05-01" }));
-    assert.match(year.body.errors.year, /Lege zuerst das Steuerjahr 2023 an/);
+    assert.match(year.body.errors.year, /Leg zuerst das Steuerjahr 2023 an/);
     const bad = await api("POST", "/api/receipts", { foo: 1 });
     assert.equal(bad.status, 400);
   });
@@ -114,8 +116,12 @@ describe("API", () => {
     assert.equal((await api("POST", "/api/receipts", receipt({ date: "2025-06-01", year: 2025 }))).status, 409);
     const moveIn = (await api("GET", "/api/receipts")).body.find((r) => r.year === 2026);
     assert.equal((await api("PATCH", `/api/receipts/${moveIn.id}`, { year: 2025 })).status, 409);
-    const checklist = await api("PATCH", `/api/tax-years/${y2025.id}`, { note: "geändert" });
+    const note = await api("PATCH", `/api/tax-years/${y2025.id}`, { note: "geändert" });
+    assert.equal(note.status, 409);
+    const toggled = y2025.checklist.map((i, n) => (n === 0 ? { ...i, done: !i.done } : i));
+    const checklist = await api("PATCH", `/api/tax-years/${y2025.id}`, { checklist: toggled });
     assert.equal(checklist.status, 409);
+    assert.match(checklist.body.error, /abgeschlossen/);
     assert.equal((await api("PATCH", `/api/tax-years/${y2025.id}`, { status: "offen" })).status, 200);
     assert.equal((await api("PATCH", `/api/receipts/${inClosed.id}`, { amountCents: 100 })).status, 200);
   });
@@ -125,7 +131,7 @@ describe("API", () => {
     const y2026 = years.find((y) => y.year === 2026);
     const delYear = await api("DELETE", `/api/tax-years/${y2026.id}`);
     assert.equal(delYear.status, 409);
-    assert.match(delYear.body.error, /Belegen/);
+    assert.match(delYear.body.error, /^Zum Steuerjahr 2026 gehören noch \d+ Belege\. /);
     const delCat = await api("DELETE", "/api/categories/kat-buero");
     assert.equal(delCat.status, 409);
     assert.match(delCat.body.error, /„Büro & Material“ wird noch von/);
@@ -133,11 +139,39 @@ describe("API", () => {
     assert.equal((await api("DELETE", `/api/tax-years/${y2024.id}`)).status, 204);
   });
 
+  test("cuerpos y tipos inválidos", async () => {
+    const r = (await api("GET", "/api/receipts")).body[0];
+    for (const raw of ["{kaputt", "null", "[]"]) {
+      const res = await api("PATCH", `/api/receipts/${r.id}`, undefined, { raw });
+      assert.equal(res.status, 400, `PATCH ${raw}`);
+    }
+    const after = (await api("GET", "/api/receipts")).body.find((x) => x.id === r.id);
+    assert.equal(after.updatedAt, r.updatedAt, "un PATCH rechazado no cambia nada");
+    const plain = await api("POST", "/api/categories", undefined, { raw: '{"name":"X"}', type: "text/plain" });
+    assert.equal(plain.status, 415);
+    const ids = await api("POST", "/api/tax-years", { year: 2027, checklist: [{ id: "a", title: "x" }, { id: "a", title: "y" }] });
+    assert.equal(ids.status, 400);
+    assert.match(ids.body.errors.checklist, /doppelt/);
+    const done = await api("POST", "/api/tax-years", { year: 2027, checklist: [{ title: "x", done: "true" }] });
+    assert.equal(done.status, 400);
+    const big = await api("POST", "/api/receipts", receipt({ amountCents: 1234567890 }));
+    assert.match(big.body.errors.amountCents, /höchstens 9\.999\.999,99/);
+    const far = await api("POST", "/api/receipts", receipt({ date: "1900-01-01" }));
+    assert.match(far.body.errors.date, /zwischen 2000/);
+  });
+
+  test("peticiones simultáneas no se saltan las reglas", async () => {
+    const results = await Promise.all([1, 2, 3].map(() => api("POST", "/api/categories", { name: "Rennen" })));
+    assert.deepEqual(results.map((r) => r.status).sort(), [201, 400, 400]);
+    const created = results.find((r) => r.status === 201).body;
+    assert.equal((await api("DELETE", `/api/categories/${created.id}`)).status, 204);
+  });
+
   test("año con justificantes: no se puede cambiar el número", async () => {
     const y2026 = (await api("GET", "/api/tax-years")).body.find((y) => y.year === 2026);
     const r = await api("PATCH", `/api/tax-years/${y2026.id}`, { year: 2024 });
     assert.equal(r.status, 400);
-    assert.match(r.body.errors.year, /kann nicht mehr geändert werden/);
+    assert.match(r.body.errors.year, /Jahreszahl lässt sich nicht mehr ändern/);
   });
 
   test("categoría: crear, nombre único sin distinguir mayúsculas, renombrar, borrar", async () => {

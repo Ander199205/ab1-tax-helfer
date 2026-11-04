@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FieldWarning } from "@/components/layout/field-warning";
 import { NativeSelect } from "@/components/layout/native-select";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,10 @@ export function ReceiptForm({ initial, years, categories, submitLabel, onSubmit,
   const [serverErrors, setServerErrors] = useState<ReceiptErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  // Con errores, el foco va al primer campo marcado; su aria-describedby lee el aviso.
+  const focusFirstInvalid = () =>
+    requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>("[aria-invalid=true]")?.focus());
 
   const cents = parseAmount(amount);
   const candidate: ReceiptInput = {
@@ -69,11 +73,14 @@ export function ReceiptForm({ initial, years, categories, submitLabel, onSubmit,
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setSubmitted(true);
-    if (Object.keys(liveErrors).length > 0) return;
+    if (Object.keys(liveErrors).length > 0) return focusFirstInvalid();
     setSaving(true);
     const result = await onSubmit(candidate);
     setSaving(false);
-    if (result) setServerErrors(result as ReceiptErrors);
+    if (result) {
+      setServerErrors(result as ReceiptErrors);
+      focusFirstInvalid();
+    }
   }
 
   const field = (key: keyof ReceiptInput) => ({
@@ -81,10 +88,14 @@ export function ReceiptForm({ initial, years, categories, submitLabel, onSubmit,
     "aria-describedby": errors[key] ? `receipt-${key}-error` : undefined,
   });
   const warning = (key: keyof ReceiptInput) =>
-    errors[key] ? <FieldWarning id={`receipt-${key}-error`}>{errors[key]}</FieldWarning> : null;
+    errors[key] ? (
+      <FieldWarning id={`receipt-${key}-error`} live={false}>
+        {errors[key]}
+      </FieldWarning>
+    ) : null;
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+    <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="receipt-date">Datum</Label>
@@ -170,7 +181,7 @@ export function ReceiptForm({ initial, years, categories, submitLabel, onSubmit,
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="receipt-party">{kind === "einnahme" ? "Kunde" : "Von wem"}</Label>
+        <Label htmlFor="receipt-party">{kind === "einnahme" ? "An wen?" : "Von wem?"}</Label>
         <Input
           id="receipt-party"
           value={party}
