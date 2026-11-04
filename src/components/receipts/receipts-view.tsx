@@ -1,6 +1,7 @@
 "use client";
 
-import { Lock, Pencil, Plus, Trash2 } from "lucide-react";
+import { Lock, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { ConfirmDelete } from "@/components/layout/confirm-delete";
@@ -11,13 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { receiptsApi } from "@/lib/api/clients";
+import { receiptFilesApi, receiptsApi } from "@/lib/api/clients";
+import { fileCountLabel } from "@/lib/files/rules";
 import { formatDay } from "@/lib/dates";
 import { useCrud } from "@/lib/hooks/use-crud";
 import { formatAmount } from "@/lib/money";
 import { totals } from "@/lib/receipts/rules";
 import { isClosed } from "@/lib/tax-years/rules";
 import { RECEIPT_KIND_LABELS, RECEIPT_KINDS, type Category, type Receipt, type TaxYear } from "@/lib/types";
+import { ReceiptFiles } from "./receipt-files";
 import { ReceiptForm } from "./receipt-form";
 
 interface ReceiptsViewProps {
@@ -26,12 +29,14 @@ interface ReceiptsViewProps {
   categories: Category[];
   /** Filtro de año inicial (desde `?jahr=`). */
   initialYear: string;
+  /** Filtro de archivos inicial (desde `?datei=ohne|mit`). */
+  initialFileFilter?: string;
 }
 
 const ALL = "alle";
 
-export function ReceiptsView({ initialReceipts, years, categories, initialYear }: ReceiptsViewProps) {
-  const { items, create, update, remove } = useCrud(initialReceipts, receiptsApi, {
+export function ReceiptsView({ initialReceipts, years, categories, initialYear, initialFileFilter = "alle" }: ReceiptsViewProps) {
+  const { items, create, update, remove, replace } = useCrud(initialReceipts, receiptsApi, {
     created: "Beleg gespeichert.",
     updated: "Beleg geändert.",
     removed: "Beleg gelöscht.",
@@ -39,6 +44,8 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
   const [yearFilter, setYearFilter] = useState(initialYear);
   const [categoryFilter, setCategoryFilter] = useState(ALL);
   const [kindFilter, setKindFilter] = useState(ALL);
+  const [fileFilter, setFileFilter] = useState(initialFileFilter);
+  const [filesOf, setFilesOf] = useState<Receipt | null>(null);
   const [dialog, setDialogState] = useState<{ mode: "new" } | { mode: "edit"; receipt: Receipt } | null>(null);
   // El diálogo se abre sin DialogTrigger: al cerrarlo, el foco vuelve al botón que lo abrió (WCAG 2.4.3).
   const opener = useRef<HTMLElement | null>(null);
@@ -55,13 +62,53 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
     .filter((r) => yearFilter === ALL || String(r.year) === yearFilter)
     .filter((r) => categoryFilter === ALL || r.categoryId === categoryFilter)
     .filter((r) => kindFilter === ALL || r.kind === kindFilter)
+    .filter((r) => fileFilter === ALL || (fileFilter === "ohne" ? r.files.length === 0 : r.files.length > 0))
     .sort((a, b) => b.date.localeCompare(a.date));
   const sum = totals(filtered);
-  const filtersActive = yearFilter !== ALL || categoryFilter !== ALL || kindFilter !== ALL;
+  const filtersActive = yearFilter !== ALL || categoryFilter !== ALL || kindFilter !== ALL || fileFilter !== ALL;
   const resetFilters = () => {
     setYearFilter(ALL);
     setCategoryFilter(ALL);
     setKindFilter(ALL);
+    setFileFilter(ALL);
+  };
+
+  /** Tras subir o quitar archivos: la lista y el diálogo abierto muestran el Beleg nuevo. */
+  const filesChanged = (updated: Receipt) => {
+    replace(updated);
+    setFilesOf((open) => (open?.id === updated.id ? updated : open));
+    setDialogState((open) => (open?.mode === "edit" && open.receipt.id === updated.id ? { mode: "edit", receipt: updated } : open));
+  };
+
+  /** Marca de archivos: «Datei fehlt» o «2 Dateien»; abre el diálogo de archivos. */
+  const filesChip = (receipt: Receipt) => {
+    const closed = closedYears.has(receipt.year);
+    const count = receipt.files.length;
+    if (count === 0 && closed) {
+      return <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-900">Datei fehlt</Badge>;
+    }
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className={count === 0 ? "h-6 rounded-full border-amber-300 bg-amber-50 px-2 text-xs text-amber-900 hover:bg-amber-100" : "h-6 rounded-full px-2 text-xs"}
+        aria-label={
+          count === 0
+            ? `Datei fehlt – Datei an den Beleg „${receipt.party}“ vom ${formatDay(receipt.date)} anhängen`
+            : `${fileCountLabel(count)} zum Beleg „${receipt.party}“ vom ${formatDay(receipt.date)} ansehen`
+        }
+        onClick={(e) => {
+          opener.current = e.currentTarget;
+          setFilesOf(receipt);
+        }}
+      >
+        {count === 0 ? "Datei fehlt" : (
+          <>
+            <Paperclip className="size-3" /> {fileCountLabel(count)}
+          </>
+        )}
+      </Button>
+    );
   };
 
   const canCreate = openYears.length > 0 && categories.length > 0;
@@ -150,6 +197,14 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
             ))}
           </NativeSelect>
         </div>
+        <div className="w-full space-y-1.5 sm:w-44">
+          <Label htmlFor="filter-files">Dateien</Label>
+          <NativeSelect id="filter-files" value={fileFilter} onChange={(e) => setFileFilter(e.target.value)}>
+            <option value={ALL}>Alle</option>
+            <option value="ohne">Nur ohne Datei</option>
+            <option value="mit">Nur mit Datei</option>
+          </NativeSelect>
+        </div>
         <Button className="w-full sm:ml-auto sm:w-auto" disabled={!canCreate} onClick={() => setDialog({ mode: "new" })}>
           <Plus /> Neuer Beleg
         </Button>
@@ -227,13 +282,14 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
                     <th scope="col" className="px-4 py-3 font-medium">Von / An</th>
                     <th scope="col" className="px-4 py-3 font-medium">Kategorie</th>
                     <th scope="col" className="px-4 py-3 font-medium">Art</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Dateien</th>
                     <th scope="col" className="px-4 py-3 text-right font-medium">Betrag</th>
                     <th scope="col" className="px-4 py-3 font-medium"><span className="sr-only">Aktionen</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {filtered.map((r) => (
-                    <tr key={r.id}>
+                    <tr key={r.id} data-row>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {formatDay(r.date)}
                         {String(r.year) !== r.date.slice(0, 4) && (
@@ -246,6 +302,7 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
                       </td>
                       <td className="px-4 py-3">{categoryName(r.categoryId)}</td>
                       <td className="px-4 py-3">{kindBadge(r)}</td>
+                      <td className="px-4 py-3">{filesChip(r)}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap tabular-nums">{formatAmount(r.amountCents)}</td>
                       <td className="px-4 py-2 text-right">{actions(r)}</td>
                     </tr>
@@ -258,7 +315,7 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
           {/* Móvil y tableta: tarjetas (dos columnas desde 768 px) */}
           <ul className="grid gap-3 md:grid-cols-2 xl:hidden" aria-label="Belege">
             {filtered.map((r) => (
-              <li key={r.id}>
+              <li key={r.id} data-row>
                 <Card className="h-full gap-2 py-4">
                   <CardContent className="space-y-2 px-4">
                     <div className="flex items-start justify-between gap-3">
@@ -273,6 +330,7 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
                       {String(r.year) !== r.date.slice(0, 4) && <span>für {r.year}</span>}
                       <span>· {categoryName(r.categoryId)}</span>
                       {kindBadge(r)}
+                      {filesChip(r)}
                     </div>
                     <div className="flex justify-end">{actions(r)}</div>
                   </CardContent>
@@ -283,9 +341,40 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
         </>
       )}
 
+      <Dialog open={filesOf !== null} onOpenChange={(open) => !open && setFilesOf(null)}>
+        <DialogContent
+          className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:max-w-lg"
+          onCloseAutoFocus={(e) => {
+            if (opener.current?.isConnected) {
+              e.preventDefault();
+              opener.current.focus();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Dateien zum Beleg</DialogTitle>
+            <DialogDescription>
+              {filesOf && `${filesOf.party}, ${formatDay(filesOf.date)}, ${formatAmount(filesOf.amountCents)}`}
+              {filesOf && closedYears.has(filesOf.year) && ". Das Steuerjahr ist abgeschlossen, du kannst die Dateien nur ansehen."}
+            </DialogDescription>
+          </DialogHeader>
+          {filesOf && (
+            <div className="-mx-6 overflow-y-auto px-6 pb-1">
+              <ReceiptFiles
+                receiptId={filesOf.id}
+                files={filesOf.files}
+                readOnly={closedYears.has(filesOf.year)}
+                onChange={filesChanged}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={dialog !== null} onOpenChange={(open) => !open && setDialog(null)}>
         <DialogContent
-          className="max-h-[90vh] overflow-y-auto sm:max-w-lg"
+          // Solo se desplaza el cuerpo: la cabecera y la X quedan a la vista en el móvil (fase 2, A10).
+          className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:max-w-lg"
           onCloseAutoFocus={(e) => {
             if (opener.current?.isConnected) {
               e.preventDefault();
@@ -298,6 +387,7 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
             <DialogDescription>Pflicht sind Datum, Betrag, „Von wem?“ bzw. „An wen?“ und Kategorie. Beschreibung und Notiz sind optional.</DialogDescription>
           </DialogHeader>
           {dialog && (
+            <div className="-mx-6 overflow-y-auto px-6 pb-1">
             <ReceiptForm
               key={dialog.mode === "edit" ? dialog.receipt.id : "new"}
               initial={dialog.mode === "edit" ? dialog.receipt : undefined}
@@ -305,13 +395,30 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
               categories={categories}
               submitLabel={dialog.mode === "edit" ? "Änderungen speichern" : "Beleg speichern"}
               onCancel={() => setDialog(null)}
-              onSubmit={async (input) => {
-                const errors =
-                  dialog.mode === "edit" ? await update(dialog.receipt.id, input) : await create(input);
-                if (!errors) setDialog(null);
-                return errors;
+              onFilesChange={filesChanged}
+              onSubmit={async (input, files) => {
+                if (dialog.mode === "edit") {
+                  const errors = await update(dialog.receipt.id, input);
+                  if (!errors) setDialog(null);
+                  return errors;
+                }
+                let created: Receipt | null = null;
+                const errors = await create(input, (item) => (created = item));
+                if (errors) return errors;
+                setDialog(null);
+                if (created && files.length > 0) {
+                  const id = (created as Receipt).id;
+                  try {
+                    replace(await receiptFilesApi.upload(id, files));
+                  } catch (e) {
+                    const detail = e instanceof Error && e.message ? e.message : "Versuch es im Beleg noch einmal.";
+                    toast.error(`Der Beleg ist gespeichert, ${files.length === 1 ? "die Datei" : "die Dateien"} aber nicht. ${detail}`);
+                  }
+                }
+                return null;
               }}
             />
+            </div>
           )}
         </DialogContent>
       </Dialog>

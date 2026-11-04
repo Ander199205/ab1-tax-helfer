@@ -4,7 +4,7 @@ Aplicación web para **reunir y ordenar justificantes (Belege) por año fiscal y
 Primero uso y prueba internos; después, producto de venta para el mercado alemán.
 **Organiza, no asesora** (el nombre lleva «Helfer», así que los textos deben dejarlo aún más claro): no calcula impuestos ni da recomendaciones fiscales (StBerG). Ver `docs/producto.md`.
 
-**Estado:** fase 2 terminada (Steuerjahre, Belege, Kategorien y Übersicht con datos ficticios). Plan de fases en `docs/producto.md`.
+**Estado:** fase 3 terminada (Steuerjahre, Belege con archivos, Kategorien y Übersicht, con datos ficticios). Plan de fases en `docs/producto.md`.
 
 ## Cómo trabajar
 
@@ -13,7 +13,7 @@ Primero uso y prueba internos; después, producto de venta para el mercado alem�
 - Mapa del código: Graphify (skill `/graphify`). Si existe `graphify-out/graph.json`, usar `graphify query "<pregunta>"`, `graphify path "A" "B"` o `graphify explain "X"` antes de buscar o leer archivos; tras cambiar código, `graphify update .` (sin coste de IA). Si no está instalado: `uv tool install graphifyy`. `graphify-out/` no se sube.
 - Controles antes de fusionar: `npx tsc --noEmit`, `npm run lint`, `npm run build` y, con la app en marcha, `node tools/capturas.mjs --url http://localhost:3000 --sin-capturas` con 0 problemas.
 - Tras `npm run build`, reinicia `npm start`: un servidor viejo sirve una versión anterior y da errores 400 en los archivos JS.
-- Pruebas (borran `data/*.json` y vuelven a la semilla): `BASE=http://localhost:3000 node --test tools/pruebas-api.mjs` y `node tools/pruebas-flujos.mjs --url http://localhost:3000`.
+- Pruebas (borran `data/*.json` y `data/uploads/` y vuelven a la semilla): `BASE=http://localhost:3000 node --test tools/pruebas-api.mjs` y `node tools/pruebas-flujos.mjs --url http://localhost:3000`.
 - Ramas `feature/<slug>`; fusión con `git merge --no-ff`. Sin despliegue todavía.
 
 ## Pila (heredada de panel-contenido)
@@ -32,12 +32,15 @@ src/lib/navigation.ts   secciones de la barra lateral (textos en alemán)
 src/lib/types.ts        dominio: TaxYear (+ checklist), Receipt, Category
 src/lib/<dominio>/      tax-years/ receipts/ categories/: parse.ts + rules.ts (reglas compartidas cliente/servidor)
 src/lib/money.ts        importes en céntimos; parseAmount/formatAmount en formato alemán
+src/lib/files/rules.ts  archivos: tipos (por bytes), 5 × 10 MB, mensajes
+src/lib/data/file-store.ts  disco: data/uploads/<uuid>.<ext> (ejemplos de solo lectura en data/seed/uploads/)
+src/lib/api/files-handlers.ts  subir (multipart, 411/413/415), ver y quitar archivos; rutas en app/api/receipts/[id]/files/
 src/components/<dominio>/  vistas cliente (tax-years, receipts, categories, overview)
 src/lib/data/           repository.ts (contrato + implementación JSON), json-store.ts
 src/lib/api/            crud-route.ts (createCrudHandlers: check/guard/beforeRemove, sección crítica, 415), handlers.ts (reglas entre colecciones), clients.ts, http.ts
 src/lib/hooks/          use-crud.ts
 src/lib/dates.ts        fechas en formato alemán (TT.MM.JJJJ)
-data/seed/              datos ficticios (en git) · data/*.json y data/uploads/ fuera de git
+data/seed/              datos ficticios (en git, incl. uploads/ de ejemplo) · data/*.json y data/uploads/ fuera de git
 tools/capturas.mjs      informe y capturas con Playwright contra la app en marcha
 tools/pruebas-api.mjs   pruebas de la API y de parseAmount (node --test)
 tools/pruebas-flujos.mjs  recorridos en el navegador a 375 y 1440 px

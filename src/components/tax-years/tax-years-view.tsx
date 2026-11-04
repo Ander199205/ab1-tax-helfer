@@ -91,13 +91,14 @@ export function TaxYearsView({ initialYears, counts }: TaxYearsViewProps) {
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
           {sorted.map((year) => (
+            <div key={year.id} data-row>
             <YearCard
-              key={year.id}
               year={year}
               count={counts[year.year] ?? 0}
               onUpdate={(patch, success) => update(year.id, patch, success)}
               onRemove={() => remove(year)}
             />
+            </div>
           ))}
         </div>
       )}
@@ -109,7 +110,7 @@ interface YearCardProps {
   year: TaxYear;
   count: number;
   onUpdate: (patch: Partial<TaxYear>, success?: string | null) => Promise<unknown>;
-  onRemove: () => void;
+  onRemove: () => Promise<unknown>;
 }
 
 function YearCard({ year, count, onUpdate, onRemove }: YearCardProps) {

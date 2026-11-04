@@ -10,7 +10,16 @@
     "year": 2025,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": [
+      {
+        "id": "8f1c2a10-1111-4a1a-9a01-000000000001",
+        "name": "Rechnung_Buerobedarf_Schneider_2025-01.pdf",
+        "type": "application/pdf",
+        "size": 912,
+        "uploadedAt": "2026-11-01T09:00:00.000Z"
+      }
+    ]
   },
   {
     "id": "beleg-02",
@@ -23,7 +32,8 @@
     "year": 2025,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-03",
@@ -36,7 +46,8 @@
     "year": 2025,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-04",
@@ -49,7 +60,8 @@
     "year": 2025,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-05",
@@ -62,7 +74,16 @@
     "year": 2025,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": [
+      {
+        "id": "8f1c2a10-1111-4a1a-9a01-000000000002",
+        "name": "Ausgangsrechnung_Baeckerei_Krueger.pdf",
+        "type": "application/pdf",
+        "size": 877,
+        "uploadedAt": "2026-11-01T09:00:00.000Z"
+      }
+    ]
   },
   {
     "id": "beleg-06",
@@ -75,7 +96,8 @@
     "year": 2025,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-07",
@@ -88,7 +110,8 @@
     "year": 2025,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-08",
@@ -101,7 +124,8 @@
     "year": 2025,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-09",
@@ -114,7 +138,8 @@
     "year": 2025,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-10",
@@ -127,7 +152,8 @@
     "year": 2026,
     "note": "Im Januar 2026 bezahlt.",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-11",
@@ -140,7 +166,8 @@
     "year": 2026,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-12",
@@ -153,7 +180,16 @@
     "year": 2026,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": [
+      {
+        "id": "8f1c2a10-1111-4a1a-9a01-000000000003",
+        "name": "Kassenbon_Druckerpapier.jpg",
+        "type": "image/jpeg",
+        "size": 24966,
+        "uploadedAt": "2026-11-01T09:00:00.000Z"
+      }
+    ]
   },
   {
     "id": "beleg-13",
@@ -166,7 +202,8 @@
     "year": 2026,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-14",
@@ -179,7 +216,16 @@
     "year": 2026,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": [
+      {
+        "id": "8f1c2a10-1111-4a1a-9a01-000000000004",
+        "name": "Fahrkarte_Leipzig_Dresden.jpg",
+        "type": "image/jpeg",
+        "size": 21595,
+        "uploadedAt": "2026-11-01T09:00:00.000Z"
+      }
+    ]
   },
   {
     "id": "beleg-15",
@@ -192,7 +238,8 @@
     "year": 2026,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-16",
@@ -205,7 +252,8 @@
     "year": 2026,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-17",
@@ -218,7 +266,8 @@
     "year": 2026,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-18",
@@ -231,7 +280,8 @@
     "year": 2026,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-19",
@@ -244,7 +294,8 @@
     "year": 2026,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   },
   {
     "id": "beleg-20",
@@ -257,6 +308,7 @@
     "year": 2026,
     "note": "",
     "createdAt": "2026-11-01T09:00:00.000Z",
-    "updatedAt": "2026-11-01T09:00:00.000Z"
+    "updatedAt": "2026-11-01T09:00:00.000Z",
+    "files": []
   }
 ]

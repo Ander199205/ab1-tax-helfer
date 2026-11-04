@@ -16,6 +16,8 @@ interface CrudConfig<T extends BaseEntity, I> {
   guard?: (input: I, current: T | null) => Promise<string | null>;
   /** Devuelve un mensaje si no se puede borrar (409). */
   beforeRemove?: (current: T) => Promise<string | null>;
+  /** Limpieza tras borrar (p. ej. los archivos de un Beleg). */
+  afterRemove?: (removed: T) => Promise<void>;
 }
 
 const hasErrors = (errors: FieldErrors) => Object.values(errors).some(Boolean);
@@ -24,7 +26,7 @@ const hasErrors = (errors: FieldErrors) => Object.values(errors).some(Boolean);
 // referencias) y la escritura van juntas, así dos peticiones simultáneas no se saltan las reglas.
 // Basta para el prototipo con JSON; en la fase 4 lo sustituyen las restricciones de la base de datos.
 let writeChain: Promise<unknown> = Promise.resolve();
-function exclusive<R>(task: () => Promise<R>): Promise<R> {
+export function exclusive<R>(task: () => Promise<R>): Promise<R> {
   const run = writeChain.catch(() => undefined).then(task);
   writeChain = run;
   return run;
@@ -47,7 +49,7 @@ const invalid = (errors?: FieldErrors) =>
     : NextResponse.json({ error: "Ungültige Daten." }, { status: 400 });
 
 export function createCrudHandlers<T extends BaseEntity, I extends object>(config: CrudConfig<T, I>) {
-  const { repo, parse, validate, notFound, check, guard, beforeRemove } = config;
+  const { repo, parse, validate, notFound, check, guard, beforeRemove, afterRemove } = config;
 
   /** Validación propia + reglas entre colecciones + bloqueos. Devuelve una respuesta de error o null. */
   async function reject(input: I, current: T | null) {
@@ -101,6 +103,7 @@ export function createCrudHandlers<T extends BaseEntity, I extends object>(confi
         const blocked = beforeRemove ? await beforeRemove(current) : null;
         if (blocked) return conflict(blocked);
         await repo.remove(id);
+        if (afterRemove) await afterRemove(current);
         return new NextResponse(null, { status: 204 });
       });
     },

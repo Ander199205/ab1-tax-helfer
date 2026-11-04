@@ -57,7 +57,24 @@ export interface ReceiptInput {
   year: number;
   note: string;
 }
-export interface Receipt extends Entity, ReceiptInput {}
+export interface Receipt extends Entity, ReceiptInput {
+  /** Archivos adjuntos. No forman parte de `ReceiptInput`: solo los cambia la API de archivos. */
+  files: ReceiptFile[];
+}
+
+// ── Archivos de los Belege (fase 3) ─────────────────────────
+export const FILE_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
+export type FileType = (typeof FILE_TYPES)[number];
+
+export interface ReceiptFile {
+  /** UUID; también es el nombre en disco (más la extensión del tipo). */
+  id: string;
+  /** Nombre original, solo para mostrar y descargar. */
+  name: string;
+  type: FileType;
+  size: number;
+  uploadedAt: string;
+}
 
 // ── Kategorien ──────────────────────────────────────────────
 export interface CategoryInput {

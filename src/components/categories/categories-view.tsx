@@ -100,7 +100,7 @@ export function CategoriesView({ initialCategories, usage }: CategoriesViewProps
                 const count = usage[category.id] ?? 0;
                 const isEditing = editing === category.id;
                 return (
-                  <li key={category.id} className="flex flex-wrap items-center gap-2 px-4 py-3">
+                  <li key={category.id} data-row className="flex flex-wrap items-center gap-2 px-4 py-3">
                     {isEditing ? (
                       <form
                         className="flex flex-1 flex-wrap items-center gap-2"

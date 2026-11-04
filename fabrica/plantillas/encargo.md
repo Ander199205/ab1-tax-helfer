@@ -40,7 +40,7 @@ Comportamientos que deben seguir igual:
 ## 6. Fuera de alcance
 
 - <lo que no se toca>
-- Archivos que se espera tocar: <lista> (el control 5 compara con `git diff --stat`)
+- Archivos que se espera tocar: <lista> + siempre `brain/`, `CLAUDE.md`, `docs/producto.md` y `tools/estado/datos.json` si cambia el estado (el control 5 compara con `git diff --stat`)
 
 ## 7. Decisiones abiertas (se responden antes de construir)
 

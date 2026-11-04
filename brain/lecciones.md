@@ -21,3 +21,10 @@ Propias:
 - 2026-11-04 — Comprobar reglas (duplicados, año cerrado) y escribir deben ir en la misma sección crítica; si no, dos peticiones simultáneas se las saltan (reproducido con dos POST).
 - 2026-11-04 — Los avisos (toasts) abajo tapan botones en móvil y no se cierran mientras el puntero está encima.
 - 2026-11-04 — Un control controlado que espera al servidor (checkbox) se nota roto: cambio optimista y vuelta atrás si falla.
+- 2026-11-04 — Un `<fieldset>` no se encoge por debajo de su contenido (`min-inline-size: min-content`): `truncate` dentro no funciona sin `min-w-0`.
+- 2026-11-04 — En un route handler de Next no hay límite de cuerpo: `request.formData()` lo carga entero en memoria. Comprobar `Content-Length` antes.
+- 2026-11-04 — `onCloseAutoFocus` de Radix llega antes que una respuesta lenta del servidor: la confirmación de borrar debe esperar al borrado antes de cerrarse; y el destino de reserva del foco no puede estar detrás de un modal abierto.
+- 2026-11-04 — Un botón `disabled` mientras trabaja pierde el foco (va a `<body>`): usar `aria-disabled`.
+- 2026-11-04 — Pruebas con diálogos anidados: no pulsar Escape hasta que el de arriba tenga el foco; mejor su botón «Schließen».
+- 2026-11-04 — Los revisores no deben escribir en los datos vivos ni aunque crean que un año está cerrado: comprobarlo antes con un GET.
+- 2026-11-04 — Dos aprobaciones seguidas paradas por no anotar archivos de documentación: la plantilla de encargo ya incluye siempre `brain/`, `CLAUDE.md`, `docs/producto.md` y `tools/estado/datos.json`.

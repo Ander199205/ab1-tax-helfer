@@ -36,7 +36,12 @@ export function useCrud<T extends { id: string }, I>(initial: T[], api: CrudClie
   return {
     items,
     replace,
-    create: (input: I) => run(() => api.create(input), messages.created, (item) => setItems((l) => [...l, item])),
+    /** `onCreated` recibe lo creado (p. ej. para subir después sus archivos). */
+    create: (input: I, onCreated?: (item: T) => void) =>
+      run(() => api.create(input), messages.created, (item) => {
+        setItems((l) => [...l, item]);
+        onCreated?.(item);
+      }),
     /** `success` a null evita el aviso (por ejemplo, al mover tarjetas). */
     update: (id: string, patch: Partial<I>, success: string | null = messages.updated) =>
       run(() => api.update(id, patch), success, replace),

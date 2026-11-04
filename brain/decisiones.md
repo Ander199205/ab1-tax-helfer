@@ -15,3 +15,5 @@
 - 2026-11-04 — Colores de estado (Offen cielo, Übergeben ámbar, Abgeschlossen esmeralda; Einnahme esmeralda, Ausgabe pizarra) fuera de los tokens de shadcn, texto oscuro sobre fondo claro (≥ 8,7:1).
 - 2026-11-04 — API: solo `application/json`; todas las escrituras en una sola sección crítica mientras los datos estén en JSON.
 - 2026-11-04 — Renombrar una categoría está permitido aunque la usen justificantes de un año cerrado: el nombre es solo para ordenar. (Ander, hallazgo D13 de la fase 2)
+- 2026-11-04 — Fase 3: hasta 5 archivos por Beleg (PDF, JPG, PNG, WebP; 10 MB), tipo comprobado por bytes, archivos en `data/uploads/` con nombre UUID; fotos en la app y PDF en pestaña nueva; «Datei fehlt» + filtro + recuento enlazado. (Ander)
+- 2026-11-04 — «Datei fehlt» usa el mismo ámbar que «übergeben»: los dos piden una acción pendiente.

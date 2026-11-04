@@ -7,10 +7,10 @@ import { taxYearsRepository } from "@/lib/data/tax-years-repository";
 export const metadata = { title: "Belege · ab1 Tax Helfer" };
 export const dynamic = "force-dynamic";
 
-type Props = { searchParams: Promise<{ jahr?: string }> };
+type Props = { searchParams: Promise<{ jahr?: string; datei?: string }> };
 
 export default async function ReceiptsPage({ searchParams }: Props) {
-  const [{ jahr }, receipts, years, categories] = await Promise.all([
+  const [{ jahr, datei }, receipts, years, categories] = await Promise.all([
     searchParams,
     receiptsRepository.list(),
     taxYearsRepository.list(),
@@ -21,7 +21,13 @@ export default async function ReceiptsPage({ searchParams }: Props) {
   return (
     <>
       <PageHeader title="Belege" description="Rechnungen, Quittungen und Nachweise mit Datum, Betrag und Kategorie." />
-      <ReceiptsView initialReceipts={receipts} years={years} categories={categories} initialYear={initialYear} />
+      <ReceiptsView
+        initialReceipts={receipts}
+        years={years}
+        categories={categories}
+        initialYear={initialYear}
+        initialFileFilter={datei === "ohne" || datei === "mit" ? datei : "alle"}
+      />
     </>
   );
 }
