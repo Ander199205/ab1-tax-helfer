@@ -1,29 +1,24 @@
-import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
-import { NAV_ITEMS } from "@/lib/navigation";
+import { OverviewView } from "@/components/overview/overview-view";
+import { receiptsRepository } from "@/lib/data/receipts-repository";
+import { taxYearsRepository } from "@/lib/data/tax-years-repository";
+import { totals } from "@/lib/receipts/rules";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function OverviewPage() {
+  const [years, receipts] = await Promise.all([taxYearsRepository.list(), receiptsRepository.list()]);
+  const summaries = [...years]
+    .sort((a, b) => b.year - a.year)
+    .map((year) => ({ year, sum: totals(receipts.filter((r) => r.year === year.year)) }));
+
   return (
     <>
       <PageHeader
         title="Übersicht"
         description="Belege pro Steuerjahr sammeln, ordnen und an die Steuerberatung übergeben. Der ab1 Tax Helfer berechnet keine Steuern und ersetzt keine Steuerberatung."
       />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {NAV_ITEMS.filter((item) => item.href !== "/").map(({ href, label, icon: Icon, description }) => (
-          <Link key={href} href={href} className="group">
-            <Card className="h-full transition-colors group-hover:border-foreground/20">
-              <CardHeader>
-                <Icon className="mb-2 size-5 text-muted-foreground" />
-                <CardTitle>{label}</CardTitle>
-                <CardDescription>{description}</CardDescription>
-              </CardHeader>
-              <CardContent />
-            </Card>
-          </Link>
-        ))}
-      </div>
+      <OverviewView summaries={summaries} />
     </>
   );
 }
