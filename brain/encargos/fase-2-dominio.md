@@ -1,7 +1,7 @@
 # Encargo 2: años, justificantes y categorías con datos ficticios (fase 2)
 
 - Slug / rama: `feature/fase-2-dominio`
-- Fecha: 04.11.2026 · Estado: revisado y corregido, pendiente de aprobación
+- Fecha: 04.11.2026 · Estado: fusionado (`b2687d4`)
 - Tamaño: normal
 
 ## 1. Qué podrá hacer quien use la app
@@ -157,4 +157,7 @@ No ejecutados: ninguno.
 - 04.11.2026 — bajo — Node ≥ 22.18 (las pruebas importan `money.ts` directamente) — fábrica
 
 ## 12. Fusión
-(pendiente de aprobación)
+
+- Aprobado por el aprobador (contexto limpio) tras repetir pruebas de API, recorridos, capturas, contraste, tsc, lint y audit.
+- Commit de fusión: `b2687d4` · Vuelta atrás: `git revert -m 1 b2687d4`
+- En `main` tras fusionar: `capturas.mjs` 0 problemas (5 rutas × 4 anchos), `pruebas-api.mjs` 35/35, `pruebas-flujos.mjs` 0 fallos. Nada empeoró fuera del encargo.
