@@ -131,6 +131,14 @@ Cuatro revisores con contexto limpio (A diseño, B accesibilidad, C idioma, D+E 
 - [x] Textos en alemán con «du»; nada en español o inglés visible
 - [x] Ninguna decisión del brain contradicha
 - [x] Fuera de alcance: también se tocaron `layout.tsx` (avisos arriba), `globals.css` (bordes y foco), `ui/dialog.tsx` («Schließen»), `field-warning.tsx` (color y `live`), `crud-route.ts` (ganchos, bloqueo, 415). Todos por hallazgos de esta fase; anotados en 11.
+  Además, fuera de la lista del apartado 6:
+  - `src/app/loading.tsx`, `src/app/error.tsx`, `src/app/not-found.tsx` — nuevos, por el hallazgo A5 (carga, error y 404 en alemán).
+  - `src/lib/dates.ts` — se quitan funciones heredadas sin uso (hallazgo D12).
+  - `src/components/layout/confirm-delete.tsx`, `empty-state.tsx`, `native-select.tsx` — componentes comunes a las tres secciones, por eso en `layout/` y no en `components/<dominio>/`.
+  - `src/lib/api/clients.ts` — los tres clientes CRUD en un solo archivo, en lugar de uno por dominio (son tres líneas).
+  - `docs/producto.md` — solo marca la fase 2 como hecha.
+  - `package.json` y `package-lock.json` — nombre `ab1-tax-helfer` y `engines.node ≥ 22.18`.
+  - `brain/decisiones.md`, `brain/lecciones.md`, `CLAUDE.md` — previstos en el apartado 6 («`brain/`, `CLAUDE.md`»).
 - [x] (Tax Organizer) tsc, lint, build y `npm audit --omit=dev` en verde
 
 No ejecutados: ninguno.
