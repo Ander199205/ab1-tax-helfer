@@ -118,7 +118,7 @@ Ejecutadas el 04.11.2026 en la rama, con `npm start` (puerto 3000) recién compi
 - [x] Contraste medido: ver B1
 - [x] Textos en alemán con «du»; nada en español o inglés
 - [x] Ninguna decisión del brain contradicha
-- [x] Fuera de la lista del apartado 6 se tocaron: `src/lib/data/receipts-repository.ts` (archivos vacíos al crear), `src/lib/api/crud-route.ts` (`exclusive` exportado, `afterRemove`), `src/lib/hooks/use-crud.ts` (`onCreated`), `src/components/layout/confirm-delete.tsx` y `page-header.tsx` (foco tras borrar), `src/components/categories/categories-view.tsx` y `tax-years/tax-years-view.tsx` (`data-row`), `src/app/page.tsx` y `src/app/belege/page.tsx` (recuento y `?datei=`), `tools/pruebas-flujos.mjs` (captura de pasos fallidos), `docs/producto.md` (marca la fase 3 como hecha). Todos por criterios o hallazgos de esta fase.
+- [x] Fuera de la lista del apartado 6 se tocaron: `src/lib/data/receipts-repository.ts` (archivos vacíos al crear), `src/lib/api/crud-route.ts` (`exclusive` exportado, `afterRemove`), `src/lib/hooks/use-crud.ts` (`onCreated`), `src/components/layout/confirm-delete.tsx` y `page-header.tsx` (foco tras borrar), `src/components/categories/categories-view.tsx` y `tax-years/tax-years-view.tsx` (`data-row`), `src/app/page.tsx` y `src/app/belege/page.tsx` (recuento y `?datei=`), `tools/pruebas-flujos.mjs` (captura de pasos fallidos), `docs/producto.md` (marca la fase 3 como hecha), `fabrica/plantillas/encargo.md` (la plantilla incluye siempre los archivos de documentación; lección del 04.11.2026). Todos por criterios o hallazgos de esta fase.
 - [x] tsc, lint, build y `npm audit --omit=dev` en verde
 
 No ejecutados: ninguno.
