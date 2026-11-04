@@ -23,6 +23,7 @@ a la asesoría fiscal. Primero la usa Ander internamente; después se ofrecerá 
 | 1 | Repo base desde `panel-contenido`, fábrica, brain, Graphify | tsc, lint, build y capturas en verde ✔ |
 | 2 | Dominio con datos ficticios: años, justificantes (sin archivo), categorías, checklist | Criterios demostrados a 375 y 1440 px ✔ |
 | 3 | Subida de archivos local y vista previa | Pruebas de tipos, tamaño y rutas ✔ |
-| 4 | Seguridad: auth, datos por usuario, SQL, cifrado, copias | Revisión de seguridad; sin esto no hay datos reales |
+| 4a | Cuentas: inicio de sesión, cuentas de clientes separadas, SQLite | Revisión de seguridad ✔ |
+| 4b | Protección: cifrado de archivos, antivirus, copias, cabeceras, borrar cuenta | Revisión de seguridad; sin esto no hay datos reales |
 | 5 | Exportación para la asesoría (ZIP + CSV en formato alemán) | Exportación abierta y comprobada |
 | 6 | Página del producto en ab1web (opcional) y despliegue en la UE | Decisión de Ander + Datenschutz actualizado |

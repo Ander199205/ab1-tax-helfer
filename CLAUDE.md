@@ -4,7 +4,7 @@ Aplicación web para **reunir y ordenar justificantes (Belege) por año fiscal y
 Primero uso y prueba internos; después, producto de venta para el mercado alemán.
 **Organiza, no asesora** (el nombre lleva «Helfer», así que los textos deben dejarlo aún más claro): no calcula impuestos ni da recomendaciones fiscales (StBerG). Ver `docs/producto.md`.
 
-**Estado:** fase 4a en revisión (inicio de sesión, cuentas de clientes separadas, SQLite). Fase 4b (cifrado, antivirus, copias) pendiente: **aún sin datos reales**. Plan de fases en `docs/producto.md`.
+**Estado:** fase 4a terminada (inicio de sesión, cuentas de clientes separadas, SQLite). Fase 4b (cifrado, antivirus, copias) pendiente: **aún sin datos reales**. Plan de fases en `docs/producto.md`.
 
 ## Cómo trabajar
 

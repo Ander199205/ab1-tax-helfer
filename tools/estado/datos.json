@@ -1,6 +1,6 @@
 {
  "actualizado": "04.11.2026",
- "commit": "3caa424",
+ "commit": "9075d22",
  "repo": "https://github.com/Ander199205/ab1-tax-helfer",
  "antes": {
   "fecha": "04.11.2026, base vacía",
@@ -54,12 +54,17 @@
    "t": "Fase 3 aprobada y en main",
    "d": "42/42 pruebas de la API, 44 pasos en el navegador sin fallos, 0 problemas en las capturas.",
    "commit": "3caa424"
+  },
+  {
+   "t": "Fase 4a: cuentas e inicio de sesión",
+   "d": "Sin sesión no se ve nada. Tú creas las cuentas de tus clientes en «Kundenkonten»; cada cliente ve solo lo suyo (probado en todas las rutas). Contraseñas con hash, sesiones seguras, límite de intentos, datos en SQLite.",
+   "commit": "9075d22"
   }
  ],
  "pendientes": [
   {
-   "t": "Fase 4: seguridad antes de datos reales",
-   "d": "Inicio de sesión, datos por usuario, base de datos, cifrado de archivos y análisis de virus.",
+   "t": "Fase 4b: protección de los datos",
+   "d": "Cifrado de archivos, antivirus, copias de seguridad, cabeceras de seguridad y borrar una cuenta con todo. Hasta entonces, solo datos inventados.",
    "tipo": "Siguiente"
   },
   {
@@ -71,6 +76,16 @@
    "t": "Revisión profesional del nombre",
    "d": "«Helfer» puede sonar a ayuda fiscal (StBerG): que lo revise un profesional antes de vender.",
    "tipo": "Antes de vender"
+  },
+  {
+   "t": "Al publicar la app",
+   "d": "Impedir que entren las cuentas de ejemplo @beispiel.de en el servidor.",
+   "tipo": "Fase 6"
+  },
+  {
+   "t": "Borrar 3 archivos viejos",
+   "d": "data/categories.json, data/receipts.json y data/tax-years.json (de la fase 3; ya no se usan).",
+   "tipo": "Tarea tuya"
   }
  ],
  "decisiones": [
@@ -101,6 +116,14 @@
   [
    "Archivos",
    "Hasta 5 por justificante (PDF, JPG, PNG, WebP; 10 MB). Tipo comprobado por el contenido, no por la extensión."
+  ],
+  [
+   "Cuentas",
+   "Solo tú creas cuentas de clientes y restableces contraseñas. Inicio de sesión con correo y contraseña; sesión de 8 h o 30 días con «angemeldet bleiben»."
+  ],
+  [
+   "Datos",
+   "SQLite en el propio servidor; al publicar, servidor y copias en Alemania."
   ]
  ]
 }

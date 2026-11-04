@@ -1,7 +1,7 @@
 # Encargo 4: seguridad antes de datos reales (fase 4)
 
 - Slug / rama: `feature/fase-4a-cuentas` (4a) y `feature/fase-4b-proteccion` (4b)
-- Fecha: 04.11.2026 · Estado: 4a revisada y corregida, pendiente de aprobación · 4b sin empezar
+- Fecha: 04.11.2026 · Estado: **4a fusionada (`9075d22`)** · 4b sin empezar
 - Tamaño: grande → se divide en dos encargos que se especifican aquí y se aprueban por separado
 
 ## Por qué en dos partes
@@ -154,4 +154,7 @@ No ejecutados: ninguno.
 - 04.11.2026 — bajo — `demo` solo con `TAX_HELFER_DEMO=1` — fábrica
 
 ## 12. Fusión (4a)
-(pendiente de aprobación)
+
+- Aprobada por el aprobador (contexto limpio) tras repetir pruebas de API y navegador, capturas, curl (401, 307, 403 desde otra web, flags de la cookie), tsc, lint y audit. Nota del aprobador: `docs/producto.md` y `tools/estado/datos.json` no estaban en la rama; se actualizan en el cierre, en `main`.
+- Commit de fusión: `9075d22` · Vuelta atrás: `git revert -m 1 9075d22`
+- En `main` tras fusionar: `pruebas-api.mjs` 53/53, `pruebas-flujos.mjs` 0 fallos, `capturas.mjs` 0 problemas.
