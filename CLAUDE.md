@@ -41,6 +41,7 @@ data/seed/              datos ficticios (en git) · data/*.json y data/uploads/ 
 tools/capturas.mjs      informe y capturas con Playwright contra la app en marcha
 tools/pruebas-api.mjs   pruebas de la API y de parseAmount (node --test)
 tools/pruebas-flujos.mjs  recorridos en el navegador a 375 y 1440 px
+tools/estado/           página de estado (plantilla, build.py, datos.json)
 fabrica/  brain/  docs/
 ```
 
@@ -65,3 +66,13 @@ fabrica/  brain/  docs/
 - Nada de terceros sin consentimiento (fuentes, analítica, CDNs): DSGVO.
 - Sin cálculos de impuestos, consejos fiscales ni promesas («steuerlich absetzbar», «Steuern sparen»…): StBerG y UWG.
 - `robots: noindex` mientras sea uso interno.
+
+## Vista previa y página de estado
+
+- **En directo:** con `npm start` (puerto 3000) en marcha, avisar del puerto a la app de Claude para que Ander lo abra en la vista previa.
+- **Página de estado:** https://claude.ai/artifact/YJ6zEvrmgD1QPZUjXhrBVy (privada). Al cerrar cada encargo:
+  1. Edita `tools/estado/datos.json` (hechos, pendientes, decisiones, fecha y commit de main).
+  2. Con la app en marcha: `node tools/capturas.mjs --url http://localhost:3000 > tools/estado/informe.txt`
+  3. `python3 tools/estado/build.py tools/estado . tools/estado/informe.txt`
+  4. Publica `tools/estado/estado-tax-helfer.html` con el Artifact tool pasando esa `url` (misma dirección).
+- Generador copiado de `ab1web/tools/estado/` (misma plantilla).
