@@ -1,0 +1,97 @@
+{
+ "actualizado": "04.11.2026",
+ "commit": "b3b53cd",
+ "repo": "https://github.com/Ander199205/ab1-tax-helfer",
+ "antes": {
+  "fecha": "04.11.2026, base vacía",
+  "avisos": 0,
+  "scroll": 0,
+  "partidos": 0,
+  "terceros": 0
+ },
+ "hechos": [
+  {
+   "t": "Fase 1: base de la app",
+   "d": "Repo propio con la base de panel-contenido, interfaz en alemán, fábrica v2, brain y Graphify.",
+   "commit": "94f6911"
+  },
+  {
+   "t": "Nombre y tono",
+   "d": "«ab1 Tax Helfer», tuteo con «du» en toda la interfaz.",
+   "commit": "7bd68d1"
+  },
+  {
+   "t": "Fase 2: años, justificantes y categorías",
+   "d": "Steuerjahre con estado y lista «Was fehlt noch?», Belege con filtros e importes a la alemana, Kategorien propias y Übersicht con sumas por año. Datos de ejemplo.",
+   "commit": "cc20c15"
+  },
+  {
+   "t": "Fase 2: hallazgos de los revisores",
+   "d": "Bordes y foco visibles (3,64:1 y 15,9:1), dos clics simultáneos ya no se saltan las reglas, «0.500» ya no se guarda como 500 €, foco y textos corregidos, carga y error en alemán.",
+   "commit": "8b71995"
+  },
+  {
+   "t": "Fase 2 aprobada y en main",
+   "d": "35/35 pruebas de la API, recorridos a 375 y 1440 px sin fallos, 0 problemas en las capturas.",
+   "commit": "b2687d4"
+  }
+ ],
+ "pendientes": [
+  {
+   "t": "Fase 3: adjuntar archivos",
+   "d": "Subir el PDF o la foto de cada justificante y verlo en la app.",
+   "tipo": "Siguiente"
+  },
+  {
+   "t": "X del diálogo en móvil",
+   "d": "En formularios largos, la X de cerrar desaparece al bajar (queda «Abbrechen»).",
+   "tipo": "Fase 3"
+  },
+  {
+   "t": "Foco tras borrar",
+   "d": "Al borrar una fila, el foco del teclado no va a un sitio claro.",
+   "tipo": "Fase 3"
+  },
+  {
+   "t": "Seguridad antes de datos reales",
+   "d": "Inicio de sesión, datos por usuario, base de datos y cifrado. Hasta entonces, solo datos inventados.",
+   "tipo": "Fase 4"
+  },
+  {
+   "t": "Exportación para la asesoría",
+   "d": "Paquete ZIP + CSV por año.",
+   "tipo": "Fase 5"
+  },
+  {
+   "t": "Revisión profesional del nombre",
+   "d": "«Helfer» puede sonar a ayuda fiscal (StBerG): que lo revise un profesional antes de vender.",
+   "tipo": "Antes de vender"
+  }
+ ],
+ "decisiones": [
+  [
+   "Qué es",
+   "Organiza justificantes y los entrega a la asesoría. No calcula impuestos ni aconseja."
+  ],
+  [
+   "Para quién",
+   "Clientes de ab1web (autónomos y pymes en Alemania). Primero uso interno."
+  ],
+  [
+   "Idioma y tono",
+   "Interfaz en alemán, tuteando con «du»."
+  ],
+  [
+   "Justificantes",
+   "Gastos e ingresos; importe total sin IVA; el año sigue a la fecha y se puede cambiar."
+  ],
+  [
+   "Años cerrados",
+   "Sus justificantes y su lista quedan bloqueados hasta reabrirlo. Renombrar una categoría sí está permitido."
+  ],
+  [
+   "Diseño",
+   "Tema claro, fuentes del sistema, desplegables nativos, avisos arriba."
+  ]
+ ]
+}
