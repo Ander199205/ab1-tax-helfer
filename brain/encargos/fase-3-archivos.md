@@ -1,7 +1,7 @@
 # Encargo 3: archivos de los justificantes (fase 3)
 
 - Slug / rama: `feature/fase-3-archivos`
-- Fecha: 04.11.2026 · Estado: revisado y corregido, pendiente de aprobación
+- Fecha: 04.11.2026 · Estado: fusionado (`3caa424`)
 - Tamaño: normal
 
 ## 1. Qué podrá hacer quien use la app
@@ -133,4 +133,7 @@ No ejecutados: ninguno.
 - 04.11.2026 — bajo — sin análisis de virus ni cifrado en disco hasta la fase 4 (solo datos inventados) — fábrica
 
 ## 12. Fusión
-(pendiente de aprobación)
+
+- Aprobado por el aprobador (contexto limpio) tras repetir pruebas de API, recorridos, capturas, cabeceras con `curl`, tsc, lint y audit; dos vueltas solo por archivos de documentación sin anotar.
+- Commit de fusión: `3caa424` · Vuelta atrás: `git revert -m 1 3caa424`
+- En `main` tras fusionar: `pruebas-api.mjs` 42/42, `pruebas-flujos.mjs` 0 fallos, `capturas.mjs` 0 problemas (5 rutas × 4 anchos). Nada empeoró fuera del encargo.

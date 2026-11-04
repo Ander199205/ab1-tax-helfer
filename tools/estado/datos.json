@@ -1,6 +1,6 @@
 {
  "actualizado": "04.11.2026",
- "commit": "b3b53cd",
+ "commit": "3caa424",
  "repo": "https://github.com/Ander199205/ab1-tax-helfer",
  "antes": {
   "fecha": "04.11.2026, base vacía",
@@ -34,28 +34,33 @@
    "t": "Fase 2 aprobada y en main",
    "d": "35/35 pruebas de la API, recorridos a 375 y 1440 px sin fallos, 0 problemas en las capturas.",
    "commit": "b2687d4"
+  },
+  {
+   "t": "Página de estado y vista previa",
+   "d": "Esta página, con capturas de cada sección a 4 anchos, y la app en directo en la vista previa.",
+   "commit": "0e51f5a"
+  },
+  {
+   "t": "Fase 3: archivos de los justificantes",
+   "d": "Hasta 5 PDF o fotos por Beleg (elegir, arrastrar o cámara); fotos en la app y PDF en pestaña nueva; marca «Datei fehlt», filtro y recuento enlazado en la Übersicht. Año cerrado: solo ver.",
+   "commit": "c3a4515"
+  },
+  {
+   "t": "Fase 3: hallazgos de los revisores",
+   "d": "Nombre largo que sacaba la X, foco tras quitar el último archivo, límite de 51 MB antes de leer (un envío de 300 MB llenaba la memoria), foco al subir y en la vista previa, textos alemanes.",
+   "commit": "b2b878a"
+  },
+  {
+   "t": "Fase 3 aprobada y en main",
+   "d": "42/42 pruebas de la API, 44 pasos en el navegador sin fallos, 0 problemas en las capturas.",
+   "commit": "3caa424"
   }
  ],
  "pendientes": [
   {
-   "t": "Fase 3: adjuntar archivos",
-   "d": "Subir el PDF o la foto de cada justificante y verlo en la app.",
+   "t": "Fase 4: seguridad antes de datos reales",
+   "d": "Inicio de sesión, datos por usuario, base de datos, cifrado de archivos y análisis de virus.",
    "tipo": "Siguiente"
-  },
-  {
-   "t": "X del diálogo en móvil",
-   "d": "En formularios largos, la X de cerrar desaparece al bajar (queda «Abbrechen»).",
-   "tipo": "Fase 3"
-  },
-  {
-   "t": "Foco tras borrar",
-   "d": "Al borrar una fila, el foco del teclado no va a un sitio claro.",
-   "tipo": "Fase 3"
-  },
-  {
-   "t": "Seguridad antes de datos reales",
-   "d": "Inicio de sesión, datos por usuario, base de datos y cifrado. Hasta entonces, solo datos inventados.",
-   "tipo": "Fase 4"
   },
   {
    "t": "Exportación para la asesoría",
@@ -92,6 +97,10 @@
   [
    "Diseño",
    "Tema claro, fuentes del sistema, desplegables nativos, avisos arriba."
+  ],
+  [
+   "Archivos",
+   "Hasta 5 por justificante (PDF, JPG, PNG, WebP; 10 MB). Tipo comprobado por el contenido, no por la extensión."
   ]
  ]
 }
