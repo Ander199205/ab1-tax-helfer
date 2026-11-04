@@ -54,8 +54,20 @@ export function OverviewView({ summaries }: { summaries: YearSummary[] }) {
                     <dd className="text-right whitespace-nowrap tabular-nums">{formatAmount(sum.expenses)}</dd>
                     <dt className="text-muted-foreground">Summe Einnahmen</dt>
                     <dd className="text-right whitespace-nowrap tabular-nums">{formatAmount(sum.income)}</dd>
-                    <dt className="text-muted-foreground">Ohne Datei</dt>
-                    <dd className="text-right whitespace-nowrap tabular-nums">{missingFiles}</dd>
+                    <dt className="text-muted-foreground">Belege ohne Datei</dt>
+                    <dd className="text-right whitespace-nowrap tabular-nums">
+                      {missingFiles === 0 ? (
+                        "0"
+                      ) : (
+                        <Link
+                          href={`/belege?jahr=${year.year}&datei=ohne`}
+                          className="inline-flex min-h-6 min-w-6 items-center justify-end underline underline-offset-4"
+                          aria-label={`${missingFiles} Belege ohne Datei im Steuerjahr ${year.year} ansehen`}
+                        >
+                          {missingFiles}
+                        </Link>
+                      )}
+                    </dd>
                     <dt className="text-muted-foreground">Was fehlt noch?</dt>
                     <dd className="text-right whitespace-nowrap">{open === 0 ? "Alles da" : `${open} von ${year.checklist.length} offen`}</dd>
                   </dl>

@@ -110,7 +110,7 @@ interface YearCardProps {
   year: TaxYear;
   count: number;
   onUpdate: (patch: Partial<TaxYear>, success?: string | null) => Promise<unknown>;
-  onRemove: () => void;
+  onRemove: () => Promise<unknown>;
 }
 
 function YearCard({ year, count, onUpdate, onRemove }: YearCardProps) {

@@ -235,11 +235,31 @@ describe("API", () => {
     assert.equal((await upload(r.id, [1, 2, 3, 4, 5].map((n) => [`${n}.pdf`, PDF, "application/pdf"]))).status, 201);
     const sixth = await upload(r.id, [["6.pdf", PDF, "application/pdf"]]);
     assert.equal(sixth.status, 400);
-    assert.match(sixth.body.error, /Höchstens 5 Dateien/);
-    const mixed = await upload((await fresh()).id, [["ok.pdf", PDF, "application/pdf"], ["boese.pdf", new TextEncoder().encode("MZ"), "application/pdf"]]);
-    assert.equal(mixed.status, 400, "si uno falla no se guarda ninguno");
+    assert.equal(sixth.body.error, "Höchstens 5 Dateien pro Beleg. Es sind schon 5 angehängt.");
+    const before = uploadsOnDisk().length;
+    const target = await fresh();
+    const mixed = await upload(target.id, [["ok.pdf", PDF, "application/pdf"], ["boese.pdf", new TextEncoder().encode("MZ"), "application/pdf"]]);
+    assert.equal(mixed.status, 400);
+    assert.equal(uploadsOnDisk().length, before, "si uno falla no se guarda ninguno en disco");
+    assert.deepEqual((await api("GET", "/api/receipts")).body.find((x) => x.id === target.id).files, []);
     const json = await api("POST", `/api/receipts/${r.id}/files`, { files: [] });
     assert.equal(json.status, 415);
+  });
+
+  test("archivos: JPG y WebP se reconocen por sus bytes", async () => {
+    const JPG = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46]);
+    const WEBP = new TextEncoder().encode("RIFF\x10\x00\x00\x00WEBPVP8 ");
+    const up = await upload((await fresh()).id, [["a.jpeg", JPG, "image/jpeg"], ["b.webp", WEBP, "image/webp"], ["c.bin", PNG, "application/octet-stream"]]);
+    assert.equal(up.status, 201);
+    assert.deepEqual(up.body.files.map((f) => f.type), ["image/jpeg", "image/webp", "image/png"], "manda el contenido, no el tipo declarado");
+  });
+
+  test("archivos: cuerpo demasiado grande → 413 sin leerlo", async () => {
+    const huge = new Uint8Array(52 * 1024 * 1024);
+    huge.set(PDF);
+    const res = await upload((await fresh()).id, [["riesig.pdf", huge, "application/pdf"]]);
+    assert.equal(res.status, 413);
+    assert.match(res.body.error, /Zu große Datenmenge/);
   });
 
   test("archivos: 404 con ids inventados o de otro Beleg", async () => {

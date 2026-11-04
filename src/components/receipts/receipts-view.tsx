@@ -29,11 +29,13 @@ interface ReceiptsViewProps {
   categories: Category[];
   /** Filtro de año inicial (desde `?jahr=`). */
   initialYear: string;
+  /** Filtro de archivos inicial (desde `?datei=ohne|mit`). */
+  initialFileFilter?: string;
 }
 
 const ALL = "alle";
 
-export function ReceiptsView({ initialReceipts, years, categories, initialYear }: ReceiptsViewProps) {
+export function ReceiptsView({ initialReceipts, years, categories, initialYear, initialFileFilter = "alle" }: ReceiptsViewProps) {
   const { items, create, update, remove, replace } = useCrud(initialReceipts, receiptsApi, {
     created: "Beleg gespeichert.",
     updated: "Beleg geändert.",
@@ -42,7 +44,7 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
   const [yearFilter, setYearFilter] = useState(initialYear);
   const [categoryFilter, setCategoryFilter] = useState(ALL);
   const [kindFilter, setKindFilter] = useState(ALL);
-  const [fileFilter, setFileFilter] = useState(ALL);
+  const [fileFilter, setFileFilter] = useState(initialFileFilter);
   const [filesOf, setFilesOf] = useState<Receipt | null>(null);
   const [dialog, setDialogState] = useState<{ mode: "new" } | { mode: "edit"; receipt: Receipt } | null>(null);
   // El diálogo se abre sin DialogTrigger: al cerrarlo, el foco vuelve al botón que lo abrió (WCAG 2.4.3).
@@ -92,7 +94,7 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
         className={count === 0 ? "h-6 rounded-full border-amber-300 bg-amber-50 px-2 text-xs text-amber-900 hover:bg-amber-100" : "h-6 rounded-full px-2 text-xs"}
         aria-label={
           count === 0
-            ? `Datei fehlt – Datei zum Beleg „${receipt.party}“ vom ${formatDay(receipt.date)} hinzufügen`
+            ? `Datei fehlt – Datei an den Beleg „${receipt.party}“ vom ${formatDay(receipt.date)} anhängen`
             : `${fileCountLabel(count)} zum Beleg „${receipt.party}“ vom ${formatDay(receipt.date)} ansehen`
         }
         onClick={(e) => {
@@ -196,7 +198,7 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
           </NativeSelect>
         </div>
         <div className="w-full space-y-1.5 sm:w-44">
-          <Label htmlFor="filter-files">Datei</Label>
+          <Label htmlFor="filter-files">Dateien</Label>
           <NativeSelect id="filter-files" value={fileFilter} onChange={(e) => setFileFilter(e.target.value)}>
             <option value={ALL}>Alle</option>
             <option value="ohne">Nur ohne Datei</option>
@@ -350,10 +352,10 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
           }}
         >
           <DialogHeader>
-            <DialogTitle>Dateien</DialogTitle>
+            <DialogTitle>Dateien zum Beleg</DialogTitle>
             <DialogDescription>
               {filesOf && `${filesOf.party}, ${formatDay(filesOf.date)}, ${formatAmount(filesOf.amountCents)}`}
-              {filesOf && closedYears.has(filesOf.year) && " · Steuerjahr abgeschlossen: nur ansehen."}
+              {filesOf && closedYears.has(filesOf.year) && ". Das Steuerjahr ist abgeschlossen, du kannst die Dateien nur ansehen."}
             </DialogDescription>
           </DialogHeader>
           {filesOf && (
@@ -409,7 +411,8 @@ export function ReceiptsView({ initialReceipts, years, categories, initialYear }
                   try {
                     replace(await receiptFilesApi.upload(id, files));
                   } catch (e) {
-                    toast.error(`Beleg gespeichert, die Dateien aber nicht: ${e instanceof Error ? e.message : ""}`);
+                    const detail = e instanceof Error && e.message ? e.message : "Versuch es im Beleg noch einmal.";
+                    toast.error(`Der Beleg ist gespeichert, ${files.length === 1 ? "die Datei" : "die Dateien"} aber nicht. ${detail}`);
                   }
                 }
                 return null;

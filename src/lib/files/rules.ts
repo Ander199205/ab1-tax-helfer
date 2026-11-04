@@ -29,11 +29,19 @@ export function detectType(bytes: Uint8Array): FileType | null {
   return null;
 }
 
+/** Mensaje del máximo de archivos, el mismo en cliente y servidor. */
+export function tooManyFilesMessage(alreadyAttached: number): string {
+  const left = MAX_FILES - alreadyAttached;
+  return left <= 0
+    ? `Höchstens ${MAX_FILES} Dateien pro Beleg. Es sind schon ${MAX_FILES} angehängt.`
+    : `Höchstens ${MAX_FILES} Dateien pro Beleg. Du kannst noch ${left === 1 ? "1 Datei" : `${left} Dateien`} anhängen.`;
+}
+
 /** Comprobación previa en el navegador (por tipo declarado y tamaño). El servidor vuelve a mirar los bytes. */
 export function checkFiles(files: { name: string; size: number; type: string }[], alreadyAttached: number): string | null {
   if (files.length === 0) return null;
   if (alreadyAttached + files.length > MAX_FILES) {
-    return `Höchstens ${MAX_FILES} Dateien pro Beleg. Es sind schon ${alreadyAttached}.`;
+    return tooManyFilesMessage(alreadyAttached);
   }
   for (const f of files) {
     if (f.size === 0) return `„${f.name}“ ist leer.`;
@@ -48,7 +56,7 @@ export function checkFiles(files: { name: string; size: number; type: string }[]
 const sizeFormat = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 });
 /** 1234567 → «1,2 MB» */
 export function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024) return `${bytes} Byte`;
   if (bytes < 1024 * 1024) return `${sizeFormat.format(bytes / 1024)} KB`;
   return `${sizeFormat.format(bytes / 1024 / 1024)} MB`;
 }

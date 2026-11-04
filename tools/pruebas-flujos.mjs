@@ -190,24 +190,29 @@ for (const width of [375, 1440]) {
     await visible(dialog.getByText("foto.png"));
     const pdfLink = dialog.getByRole("link", { name: /Rechnung Müller\.pdf/ });
     if ((await pdfLink.getAttribute("target")) !== "_blank") throw new Error("el PDF no abre en pestaña nueva");
+    const pdf = await page.request.get(new URL(await pdfLink.getAttribute("href"), BASE).href);
+    if (pdf.status() !== 200 || pdf.headers()["content-type"] !== "application/pdf") throw new Error(`PDF: ${pdf.status()} ${pdf.headers()["content-type"]}`);
     await dialog.getByRole("button", { name: "Vorschau von „foto.png“ öffnen" }).click();
-    await visible(page.getByRole("img", { name: "Beleg-Datei foto.png" }));
-    await page.keyboard.press("Escape");
+    const previewDialog = page.getByRole("dialog", { name: "foto.png" });
+    await visible(previewDialog.getByRole("img", { name: "Beleg-Datei foto.png" }));
+    await previewDialog.getByRole("button", { name: "Schließen" }).click();
     await gone(page.getByRole("img", { name: "Beleg-Datei foto.png" }));
+    // el foco vuelve a la miniatura que abrió la vista previa
+    await page.waitForFunction(() => document.activeElement?.getAttribute("aria-label") === "Vorschau von „foto.png“ öffnen");
     await dialog.getByRole("button", { name: "Datei „foto.png“ entfernen" }).click();
-    await page.getByRole("alertdialog").getByRole("button", { name: "Löschen" }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Entfernen" }).click();
     await gone(page.getByRole("alertdialog"));
     await gone(dialog.getByText("foto.png"));
     // el foco vuelve a la fila que queda, no a <body>
     await page.waitForFunction(() => document.activeElement?.textContent?.includes("Rechnung Müller.pdf"));
     await page.keyboard.press("Escape");
-    await gone(page.getByRole("dialog", { name: "Dateien" }));
+    await gone(page.getByRole("dialog", { name: "Dateien zum Beleg" }));
   });
   await step("Filter: nur ohne Datei", async () => {
-    await page.getByLabel("Datei", { exact: true }).selectOption("ohne");
+    await page.getByLabel("Dateien", { exact: true }).selectOption("ohne");
     await gone(list.getByText("Testfirma Müller"));
     await visible(list.getByText("Stadtbank Leipzig"));
-    await page.getByLabel("Datei", { exact: true }).selectOption("alle");
+    await page.getByLabel("Dateien", { exact: true }).selectOption("alle");
   });
   await step("Beleg bearbeiten (99,5 → 99,50 €)", async () => {
     await page.getByRole("button", { name: "Beleg „Testfirma Müller“ vom 15.03.2026 bearbeiten" }).click();
@@ -246,8 +251,11 @@ for (const width of [375, 1440]) {
     await visible(c.getByText("717,88 €"));
     await visible(c.getByText("6.814,56 €"));
     await visible(c.getByText("3 von 5 offen"));
-    const missing = await c.locator("dt", { hasText: "Ohne Datei" }).locator("xpath=following-sibling::dd[1]").textContent();
+    const missing = await c.locator("dt", { hasText: "Belege ohne Datei" }).locator("xpath=following-sibling::dd[1]").textContent();
     if (missing?.trim() !== "9") throw new Error(`Ohne Datei: ${missing}`);
+    await c.getByRole("link", { name: "9 Belege ohne Datei im Steuerjahr 2026 ansehen" }).click();
+    await page.waitForURL(/datei=ohne/);
+    if ((await page.getByLabel("Dateien", { exact: true }).inputValue()) !== "ohne") throw new Error("el filtro no se abre desde la Übersicht");
   });
   await shot("uebersicht");
 

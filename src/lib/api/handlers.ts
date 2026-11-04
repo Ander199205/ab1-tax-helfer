@@ -71,7 +71,9 @@ export const receiptsHandlers = createCrudHandlers({
   },
   beforeRemove: async (receipt) => (isClosed(await findYear(receipt.year)) ? closedMessage(receipt.year) : null),
   afterRemove: async (receipt) => {
-    for (const file of receipt.files ?? []) await deleteFile(file);
+    for (const file of receipt.files ?? []) {
+      await deleteFile(file).catch((error) => console.error("Datei ließ sich nicht löschen", file.id, error));
+    }
   },
 });
 
