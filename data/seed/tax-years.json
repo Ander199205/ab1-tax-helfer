@@ -1,0 +1,72 @@
+[
+  {
+    "id": "jahr-2025",
+    "year": 2025,
+    "status": "uebergeben",
+    "note": "Am 12.03.2026 an die Steuerberatung geschickt.",
+    "checklist": [
+      {
+        "id": "cl-2025-1",
+        "title": "Kontoauszüge (Januar–Dezember)",
+        "done": true
+      },
+      {
+        "id": "cl-2025-2",
+        "title": "Ausgangsrechnungen",
+        "done": true
+      },
+      {
+        "id": "cl-2025-3",
+        "title": "Eingangsrechnungen",
+        "done": true
+      },
+      {
+        "id": "cl-2025-4",
+        "title": "Verträge (Miete, Versicherungen)",
+        "done": true
+      },
+      {
+        "id": "cl-2025-5",
+        "title": "Sonstige Nachweise",
+        "done": true
+      }
+    ],
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
+  },
+  {
+    "id": "jahr-2026",
+    "year": 2026,
+    "status": "offen",
+    "note": "",
+    "checklist": [
+      {
+        "id": "cl-2026-1",
+        "title": "Kontoauszüge (Januar–Dezember)",
+        "done": true
+      },
+      {
+        "id": "cl-2026-2",
+        "title": "Ausgangsrechnungen",
+        "done": true
+      },
+      {
+        "id": "cl-2026-3",
+        "title": "Eingangsrechnungen",
+        "done": false
+      },
+      {
+        "id": "cl-2026-4",
+        "title": "Verträge (Miete, Versicherungen)",
+        "done": false
+      },
+      {
+        "id": "cl-2026-5",
+        "title": "Sonstige Nachweise",
+        "done": false
+      }
+    ],
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-01T09:00:00.000Z"
+  }
+]

@@ -11,3 +11,6 @@
 
 - 2026-11-04 — Tratamiento: «du» en toda la interfaz, como la web de ab1web; la empresa habla en «wir». (Ander)
 - 2026-11-04 — Nombre: «ab1 Tax Helfer» (Ander). Riesgo anotado: «Helfer» puede sugerir «Hilfeleistung in Steuersachen» (StBerG); por eso la portada y los textos de venta dicen siempre que no calcula impuestos ni sustituye a la asesoría fiscal. Antes de vender, que lo revise un profesional (nombre y textos).
+- 2026-11-04 — Fase 2: gastos e ingresos; año según la fecha y editable; año cerrado en solo lectura (también su checklist) hasta reabrirlo; 9 categorías neutras; checklist inicial de 5 puntos; importe bruto sin IVA. (Ander)
+- 2026-11-04 — Colores de estado (Offen cielo, Übergeben ámbar, Abgeschlossen esmeralda; Einnahme esmeralda, Ausgabe pizarra) fuera de los tokens de shadcn, texto oscuro sobre fondo claro (≥ 8,7:1).
+- 2026-11-04 — API: solo `application/json`; todas las escrituras en una sola sección crítica mientras los datos estén en JSON.

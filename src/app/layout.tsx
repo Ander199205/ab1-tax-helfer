@@ -20,7 +20,8 @@ export default function RootLayout({
       <body className="antialiased">
         <AppSidebar />
         <main className="min-h-screen px-4 py-6 md:ml-60 md:px-8 md:py-8">{children}</main>
-        <Toaster richColors position="bottom-right" />
+        {/* Arriba: abajo tapaba los botones de la última fila en móvil (fase 2). */}
+        <Toaster richColors position="top-center" />
       </body>
     </html>
   );

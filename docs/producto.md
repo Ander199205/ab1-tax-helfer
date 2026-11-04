@@ -21,7 +21,7 @@ a la asesoría fiscal. Primero la usa Ander internamente; después se ofrecerá 
 |---|---|---|
 | 0 | Decisiones e informe previo | Respuestas de Ander ✔ (04.11.2026) |
 | 1 | Repo base desde `panel-contenido`, fábrica, brain, Graphify | tsc, lint, build y capturas en verde ✔ |
-| 2 | Dominio con datos ficticios: años, justificantes (sin archivo), categorías, checklist | Criterios demostrados a 375 y 1440 px |
+| 2 | Dominio con datos ficticios: años, justificantes (sin archivo), categorías, checklist | Criterios demostrados a 375 y 1440 px ✔ |
 | 3 | Subida de archivos local y vista previa | Pruebas de tipos, tamaño y rutas |
 | 4 | Seguridad: auth, datos por usuario, SQL, cifrado, copias | Revisión de seguridad; sin esto no hay datos reales |
 | 5 | Exportación para la asesoría (ZIP + CSV en formato alemán) | Exportación abierta y comprobada |
