@@ -1,7 +1,7 @@
 # Encargo 4: seguridad antes de datos reales (fase 4)
 
 - Slug / rama: `feature/fase-4a-cuentas` (4a) y `feature/fase-4b-proteccion` (4b)
-- Fecha: 04.11.2026 · Estado: **decisiones abiertas**
+- Fecha: 04.11.2026 · Estado: 4a en construcción
 - Tamaño: grande → se divide en dos encargos que se especifican aquí y se aprueban por separado
 
 ## Por qué en dos partes
@@ -71,14 +71,14 @@ Pruebas automáticas ampliadas (API y navegador) con **dos cuentas de prueba**, 
 
 ## 7. Decisiones abiertas (se responden antes de construir)
 
-- [ ] **D1. Base de datos**: (a) **SQLite** en un archivo (`node:sqlite`, sin dependencias nuevas; aviso: Node lo marca «experimental») — **recomendada** para empezar con pocos clientes; el `Repository` permite pasar a PostgreSQL más adelante; (b) SQLite con la librería `better-sqlite3` (estable, dependencia nativa nueva); (c) PostgreSQL ya (servidor aparte, más mantenimiento).
-- [ ] **D2. Inicio de sesión**: (a) **correo + contraseña propios** (scrypt de Node, sesiones en la base de datos), sin terceros — **recomendada**; (b) enlace mágico por correo (necesita proveedor de correo con AVV); (c) librería Auth.js.
-- [ ] **D3. Cuentas**: (a) **solo el administrador crea cuentas**; cada cuenta = un cliente con sus datos separados — **recomendada**; (b) registro público.
-- [ ] **D4. Contraseña olvidada**: (a) **la restablece el administrador** hasta tener correo con AVV — **recomendada**; (b) correo de recuperación ya.
-- [ ] **D5. Cifrado de archivos**: (a) **AES-256-GCM en la app** con la clave en una variable de entorno (más el cifrado de disco del servidor cuando se despliegue) — **recomendada**; (b) solo el cifrado de disco del servidor.
-- [ ] **D6. Antivirus**: (a) **ClamAV** en el propio servidor (sin terceros); si no está disponible, no se aceptan subidas — **recomendada**; (b) aceptar sin analizar mientras sea uso interno.
-- [ ] **D7. Dónde irán los datos al desplegar** (se decide ahora porque condiciona copias y cifrado): (a) **servidor en Alemania** (p. ej. Hetzner, Núremberg/Falkenstein; empresa alemana con AVV) y copias en otro centro de datos alemán — **recomendada**; (b) plataforma de EE. UU. con región UE (Vercel, AWS…): más cómoda, peor encaje con DSGVO por la CLOUD Act.
-- [ ] **D8. Duración de la sesión**: (a) **8 horas sin actividad, máximo 30 días** con «angemeldet bleiben» — **recomendada**; (b) otra.
+- [x] **D1. Base de datos**: (a) **SQLite** en un archivo (`node:sqlite`, sin dependencias nuevas; aviso: Node lo marca «experimental») — **recomendada** para empezar con pocos clientes; el `Repository` permite pasar a PostgreSQL más adelante; (b) SQLite con la librería `better-sqlite3` (estable, dependencia nativa nueva); (c) PostgreSQL ya (servidor aparte, más mantenimiento).
+- [x] **D2. Inicio de sesión**: (a) **correo + contraseña propios** (scrypt de Node, sesiones en la base de datos), sin terceros — **recomendada**; (b) enlace mágico por correo (necesita proveedor de correo con AVV); (c) librería Auth.js.
+- [x] **D3. Cuentas**: (a) **solo el administrador crea cuentas**; cada cuenta = un cliente con sus datos separados — **recomendada**; (b) registro público.
+- [x] **D4. Contraseña olvidada**: (a) **la restablece el administrador** hasta tener correo con AVV — **recomendada**; (b) correo de recuperación ya.
+- [x] **D5. Cifrado de archivos**: (a) **AES-256-GCM en la app** con la clave en una variable de entorno (más el cifrado de disco del servidor cuando se despliegue) — **recomendada**; (b) solo el cifrado de disco del servidor.
+- [x] **D6. Antivirus**: (a) **ClamAV** en el propio servidor (sin terceros); si no está disponible, no se aceptan subidas — **recomendada**; (b) aceptar sin analizar mientras sea uso interno.
+- [x] **D7. Dónde irán los datos al desplegar** (se decide ahora porque condiciona copias y cifrado): (a) **servidor en Alemania** (p. ej. Hetzner, Núremberg/Falkenstein; empresa alemana con AVV) y copias en otro centro de datos alemán — **recomendada**; (b) plataforma de EE. UU. con región UE (Vercel, AWS…): más cómoda, peor encaje con DSGVO por la CLOUD Act.
+- [x] **D8. Duración de la sesión**: (a) **8 horas sin actividad, máximo 30 días** con «angemeldet bleiben» — **recomendada**; (b) otra.
 
 Supuestos de riesgo bajo:
 - Cuenta de administrador inicial creada con un comando (`node tools/admin.mjs crear …`), nunca con datos en el repo.

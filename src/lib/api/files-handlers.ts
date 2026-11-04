@@ -6,6 +6,7 @@ import { receiptsRepository } from "@/lib/data/receipts-repository";
 import { detectType, MAX_FILE_BYTES, MAX_FILES, tooManyFilesMessage } from "@/lib/files/rules";
 import { isClosed } from "@/lib/tax-years/rules";
 import type { ReceiptFile, ReceiptInput } from "@/lib/types";
+import { currentUser, unauthorized } from "@/lib/auth/current-user";
 import { exclusive } from "./crud-route";
 import { closedMessage, findYear } from "./handlers";
 
@@ -19,6 +20,9 @@ const withFiles = (files: ReceiptFile[]) => ({ files }) as unknown as Partial<Re
 const MAX_BODY_BYTES = MAX_FILES * MAX_FILE_BYTES + 1024 * 1024;
 
 export async function uploadFiles(request: Request, receiptId: string) {
+  const user = await currentUser();
+  if (!user) return unauthorized();
+  const receipts = receiptsRepository(user.id);
   if (!(request.headers.get("content-type") ?? "").startsWith("multipart/form-data")) {
     return NextResponse.json({ error: "Nur Datei-Uploads werden angenommen." }, { status: 415 });
   }
@@ -29,9 +33,9 @@ export async function uploadFiles(request: Request, receiptId: string) {
   if (declared > MAX_BODY_BYTES) {
     return NextResponse.json({ error: "Zu große Datenmenge (höchstens 5 Dateien mit je 10 MB)." }, { status: 413 });
   }
-  const existing = await receiptsRepository.get(receiptId);
+  const existing = await receipts.get(receiptId);
   if (!existing) return NOT_FOUND();
-  if (isClosed(await findYear(existing.year))) {
+  if (isClosed(await findYear(user.id, existing.year))) {
     return NextResponse.json({ error: closedMessage(existing.year) }, { status: 409 });
   }
   const form = await request.formData().catch(() => null);
@@ -39,9 +43,9 @@ export async function uploadFiles(request: Request, receiptId: string) {
   if (uploads.length === 0) return fileError("Wähle mindestens eine Datei aus.");
 
   return exclusive(async () => {
-    const receipt = await receiptsRepository.get(receiptId);
+    const receipt = await receipts.get(receiptId);
     if (!receipt) return NOT_FOUND();
-    if (isClosed(await findYear(receipt.year))) {
+    if (isClosed(await findYear(user.id, receipt.year))) {
       return NextResponse.json({ error: closedMessage(receipt.year) }, { status: 409 });
     }
     const current = receipt.files ?? [];
@@ -64,7 +68,7 @@ export async function uploadFiles(request: Request, receiptId: string) {
         const id = await saveFile(bytes, type);
         added.push({ id, name: file.name.slice(0, 200) || "Datei", type, size: file.size, uploadedAt: new Date().toISOString() });
       }
-      const updated = await receiptsRepository.update(receiptId, withFiles([...current, ...added]));
+      const updated = await receipts.update(receiptId, withFiles([...current, ...added]));
       return NextResponse.json(updated, { status: 201 });
     } catch (error) {
       // Si algo falla a mitad, no quedan archivos huérfanos en disco.
@@ -75,7 +79,9 @@ export async function uploadFiles(request: Request, receiptId: string) {
 }
 
 export async function serveFile(receiptId: string, fileId: string) {
-  const receipt = await receiptsRepository.get(receiptId);
+  const user = await currentUser();
+  if (!user) return unauthorized();
+  const receipt = await receiptsRepository(user.id).get(receiptId);
   const file = receipt?.files?.find((f) => f.id === fileId);
   if (!file) return NOT_FOUND();
   const bytes = await readFile(file);
@@ -94,15 +100,18 @@ export async function serveFile(receiptId: string, fileId: string) {
 }
 
 export async function removeFile(receiptId: string, fileId: string) {
+  const user = await currentUser();
+  if (!user) return unauthorized();
+  const receipts = receiptsRepository(user.id);
   return exclusive(async () => {
-    const receipt = await receiptsRepository.get(receiptId);
+    const receipt = await receipts.get(receiptId);
     const file = receipt?.files?.find((f) => f.id === fileId);
     if (!receipt || !file) return NOT_FOUND();
-    if (isClosed(await findYear(receipt.year))) {
+    if (isClosed(await findYear(user.id, receipt.year))) {
       return NextResponse.json({ error: closedMessage(receipt.year) }, { status: 409 });
     }
     // Primero el registro y después el disco: como mucho queda un archivo huérfano, nunca un registro sin archivo.
-    const updated = await receiptsRepository.update(receiptId, withFiles(receipt.files.filter((f) => f.id !== fileId)));
+    const updated = await receipts.update(receiptId, withFiles(receipt.files.filter((f) => f.id !== fileId)));
     await deleteFile(file).catch((error) => console.error("Datei ließ sich nicht löschen", file.id, error));
     return NextResponse.json(updated);
   });

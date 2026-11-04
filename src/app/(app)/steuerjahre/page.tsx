@@ -2,12 +2,14 @@ import { PageHeader } from "@/components/layout/page-header";
 import { TaxYearsView } from "@/components/tax-years/tax-years-view";
 import { receiptsRepository } from "@/lib/data/receipts-repository";
 import { taxYearsRepository } from "@/lib/data/tax-years-repository";
+import { requireUser } from "@/lib/auth/current-user";
 
 export const metadata = { title: "Steuerjahre · ab1 Tax Helfer" };
 export const dynamic = "force-dynamic";
 
 export default async function TaxYearsPage() {
-  const [years, receipts] = await Promise.all([taxYearsRepository.list(), receiptsRepository.list()]);
+  const { id } = await requireUser();
+  const [years, receipts] = await Promise.all([taxYearsRepository(id).list(), receiptsRepository(id).list()]);
   const counts: Record<number, number> = {};
   for (const r of receipts) counts[r.year] = (counts[r.year] ?? 0) + 1;
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Recorre los flujos de la fase 2 en el navegador (Playwright) a 375 y 1440 px.
 // Uso, con la app en marcha:  node tools/pruebas-flujos.mjs [--url http://localhost:3000]
-// OJO: borra data/*.json antes de cada ancho y al terminar (vuelven los datos de data/seed/).
+// OJO: ejecuta `node tools/admin.mjs demo` antes de cada ancho y al terminar (borra la base de datos local).
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
-import path from "node:path";
 // Playwright: el del proyecto si está instalado; si no, el global del sistema (igual que tools/capturas.mjs).
 import { createRequire } from "node:module";
 
@@ -19,10 +19,15 @@ const i = process.argv.indexOf("--url");
 const BASE = i > -1 ? process.argv[i + 1] : "http://localhost:3000";
 const OUT = ".capturas";
 fs.mkdirSync(OUT, { recursive: true });
-const resetData = () => {
-  for (const f of fs.readdirSync("data")) if (f.endsWith(".json")) fs.rmSync(path.join("data", f));
-  fs.rmSync(path.join("data", "uploads"), { recursive: true, force: true });
-};
+const resetData = () => execFileSync(process.execPath, ["--no-warnings", "tools/admin.mjs", "demo"], { stdio: "ignore" });
+
+async function signIn(page, email, password) {
+  await page.goto(`${BASE}/anmelden`, { waitUntil: "networkidle" });
+  await page.getByLabel("E-Mail").fill(email);
+  await page.getByLabel("Passwort").fill(password);
+  await page.getByRole("button", { name: "Anmelden" }).click();
+  await page.waitForURL(`${BASE}/`);
+}
 
 let failures = 0;
 let currentPage = null; // para la captura de un paso que falla
@@ -49,8 +54,25 @@ for (const width of [375, 1440]) {
   currentPage = page;
   const jsErrors = [];
   page.on("pageerror", (e) => jsErrors.push(e.message));
-  page.on("console", (m) => m.type() === "error" && !/status of 40[09]/.test(m.text()) && jsErrors.push(m.text()));
+  page.on("console", (m) => m.type() === "error" && !/status of 40[0139]/.test(m.text()) && jsErrors.push(m.text()));
   const shot = (name) => page.screenshot({ path: `${OUT}/flujo-${name}-${width}.jpg`, type: "jpeg", quality: 55, fullPage: true });
+
+  // 0. Anmelden (fase 4a)
+  await step("ohne Anmeldung → Anmelden; falsches Passwort wird abgelehnt", async () => {
+    await page.goto(`${BASE}/belege`, { waitUntil: "networkidle" });
+    if (!page.url().endsWith("/anmelden")) throw new Error(`sin sesión llegó a ${page.url()}`);
+    await page.getByLabel("E-Mail").fill("muster@beispiel.de");
+    await page.getByLabel("Passwort").fill("falsch-falsch");
+    await page.getByRole("button", { name: "Anmelden" }).click();
+    await visible(page.getByText("E-Mail oder Passwort stimmt nicht."));
+  });
+  await shot("anmelden");
+  await step("anmelden als Muster Design", async () => {
+    await signIn(page, "muster@beispiel.de", "Demo-Muster-2026!");
+    await visible(page.getByText("Angemeldet als"));
+    await visible(page.getByText("Muster Design (Demo)"));
+    if (await page.getByRole("link", { name: "Verwaltung" }).count()) throw new Error("un cliente ve «Verwaltung»");
+  });
 
   // 1. Kategorien
   await page.goto(`${BASE}/kategorien`, { waitUntil: "networkidle" });
@@ -258,6 +280,36 @@ for (const width of [375, 1440]) {
     if ((await page.getByLabel("Dateien", { exact: true }).inputValue()) !== "ohne") throw new Error("el filtro no se abre desde la Übersicht");
   });
   await shot("uebersicht");
+
+  // 5. Abmelden y Verwaltung (fase 4a)
+  await step("abmelden → Anmelden; danach keine Seite ohne Anmeldung", async () => {
+    await page.getByRole("button", { name: "Abmelden" }).click();
+    await page.waitForURL(/\/anmelden$/);
+    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+    if (!page.url().endsWith("/anmelden")) throw new Error("tras cerrar sesión sigue entrando");
+  });
+  let newPassword = "";
+  await step("Verwaltung: Kundenkonto anlegen, Passwort wird einmal angezeigt", async () => {
+    await signIn(page, "admin@beispiel.de", "Demo-Admin-2026!");
+    await page.getByRole("link", { name: "Verwaltung" }).click();
+    await page.waitForURL(/\/verwaltung$/);
+    await page.getByLabel("Name des Kunden").fill(`Testkunde ${width}`);
+    await page.getByLabel("E-Mail").fill(`test${width}@beispiel.de`);
+    await page.getByRole("button", { name: "Konto anlegen" }).click();
+    const dialog = page.getByRole("dialog", { name: "Konto angelegt" });
+    await visible(dialog);
+    newPassword = (await dialog.getByTestId("new-password").textContent()).trim();
+    if (!/^[A-Za-z2-9]{4}(-[A-Za-z2-9]{4}){3}$/.test(newPassword)) throw new Error(`contraseña: ${newPassword}`);
+    await dialog.getByRole("button", { name: "Fertig" }).click();
+    await visible(page.getByText(`Testkunde ${width}`));
+  });
+  await shot("verwaltung");
+  await step("neues Konto meldet sich an und sieht nur ein leeres Konto", async () => {
+    await page.getByRole("button", { name: "Abmelden" }).click();
+    await page.waitForURL(/\/anmelden$/);
+    await signIn(page, `test${width}@beispiel.de`, newPassword);
+    await visible(page.getByText("Noch keine Steuerjahre."));
+  });
 
   await step("ohne JavaScript-Fehler", async () => {
     if (jsErrors.length) throw new Error(jsErrors.slice(0, 3).join(" | "));

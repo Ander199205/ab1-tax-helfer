@@ -2,12 +2,14 @@ import { PageHeader } from "@/components/layout/page-header";
 import { OverviewView } from "@/components/overview/overview-view";
 import { receiptsRepository } from "@/lib/data/receipts-repository";
 import { taxYearsRepository } from "@/lib/data/tax-years-repository";
+import { requireUser } from "@/lib/auth/current-user";
 import { totals } from "@/lib/receipts/rules";
 
 export const dynamic = "force-dynamic";
 
 export default async function OverviewPage() {
-  const [years, receipts] = await Promise.all([taxYearsRepository.list(), receiptsRepository.list()]);
+  const { id } = await requireUser();
+  const [years, receipts] = await Promise.all([taxYearsRepository(id).list(), receiptsRepository(id).list()]);
   const summaries = [...years]
     .sort((a, b) => b.year - a.year)
     .map((year) => {

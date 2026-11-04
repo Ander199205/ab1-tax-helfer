@@ -1,5 +1,4 @@
-import "server-only";
-import type { CategoryInput, Category } from "@/lib/types";
-import { createJsonRepository, type Repository } from "./repository";
+import type { Category, CategoryInput } from "../types.ts";
+import { createSqlRepository } from "./repository.ts";
 
-export const categoriesRepository: Repository<Category, CategoryInput> = createJsonRepository<Category, CategoryInput>("categories");
+export const categoriesRepository = createSqlRepository<Category, CategoryInput>("categories");
