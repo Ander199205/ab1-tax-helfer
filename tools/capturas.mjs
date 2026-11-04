@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Capturas y comprobaciones rápidas de ab1 Tax Helfer (copiado de ab1web/tools/capturas.mjs).
 // Uso con la app en marcha (npm run dev o npm start):
-//   node tools/capturas.mjs --url http://localhost:3000 [--out .capturas] [--anchos 375,768,1200,1440] [--sin-capturas] / /belege …
+//   node tools/capturas.mjs --url http://localhost:3000 [--login correo:contraseña] [--out .capturas] [--anchos 375,768,1200,1440] [--sin-capturas] / /belege …
+// --login: inicia sesión antes (por defecto, la cuenta de demostración muster@beispiel.de; ver tools/admin.mjs demo).
 // Sin rutas: revisa todas las secciones de src/lib/navigation.ts.
 // La interfaz solo está en alemán: --idiomas no se usa (se deja por compatibilidad con ab1web).
 //
@@ -29,6 +30,7 @@ const opt = (name, def) => {
   return v;
 };
 const url = opt("url", "http://localhost:3000");
+const [loginEmail, loginPassword] = opt("login", "muster@beispiel.de:Demo-Muster-2026!").split(/:(.*)/s);
 const out = path.resolve(opt("out", ".capturas"));
 const anchos = opt("anchos", "375,768,1200,1440").split(",").map(Number);
 const idiomas = opt("idiomas", "de").split(",");
@@ -38,11 +40,24 @@ const paginas = args.filter((a) => !a.startsWith("--"));
 if (paginas.length === 0) {
   const nav = fs.readFileSync("src/lib/navigation.ts", "utf8");
   for (const m of nav.matchAll(/href: "([^"]+)"/g)) paginas.push(m[1]);
+  paginas.push("/konto"); // «Verwaltung» solo con --login de administrador
 }
 const base = url.replace(/\/$/, "");
 fs.mkdirSync(out, { recursive: true });
 
 const browser = await chromium.launch();
+// Sesión (fase 4a): sin ella todas las páginas llevan a «Anmelden».
+const loginRes = await fetch(`${base}/api/auth/login`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+});
+if (!loginRes.ok) {
+  console.error(`✗ no se pudo iniciar sesión como ${loginEmail} (${loginRes.status}). ¿Faltan los datos de demostración? node tools/admin.mjs demo`);
+  process.exit(1);
+}
+const [cookieName, ...cookieValue] = loginRes.headers.get("set-cookie").split(";")[0].split("=");
+const sessionCookie = [cookieName, cookieValue.join("=")];
 const externas = new Set();
 let problemas = 0;
 
@@ -50,6 +65,8 @@ for (const pagina of paginas) {
   for (const idioma of idiomas) {
   for (const ancho of anchos) {
     const ctx = await browser.newContext({ viewport: { width: ancho, height: 900 }, deviceScaleFactor: 1 });
+    // Cookie __Host-: Secure y Path=/ explícitos (Chrome los acepta en http://localhost).
+    await ctx.addCookies([{ name: sessionCookie[0], value: sessionCookie[1], domain: new URL(base).hostname, path: "/", secure: true, httpOnly: true, sameSite: "Lax" }]);
     await ctx.addInitScript((l) => { try { localStorage.setItem("ab1web-language-v2", l); } catch {} }, idioma);
     const page = await ctx.newPage();
     page.on("request", (r) => { if (!r.url().startsWith(base) && !r.url().startsWith("data:")) externas.add(r.url().split("?")[0]); });
@@ -70,6 +87,7 @@ for (const pagina of paginas) {
         res.push(`scroll horizontal (${de.scrollWidth}px > ${de.clientWidth}px): ${culpables.join(", ")}`);
       }
       if (!de.lang) res.push("falta lang en <html>");
+      if (location.pathname === "/anmelden" && !document.title.startsWith("Anmelden · ")) res.push("redirigida a «Anmelden»: la sesión no vale");
       // Etiquetas HTML que se ven escritas (texto con <b> o <span> rellenado como texto plano)
       const etiquetas = document.body.innerText.match(/<\/?[a-z]+[^>]*>/gi);
       if (etiquetas) res.push(`etiqueta HTML visible como texto: ${[...new Set(etiquetas)].slice(0, 3).join(" ")}`);

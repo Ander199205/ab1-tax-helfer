@@ -1,5 +1,4 @@
-import "server-only";
-import type { TaxYearInput, TaxYear } from "@/lib/types";
-import { createJsonRepository, type Repository } from "./repository";
+import type { TaxYear, TaxYearInput } from "../types.ts";
+import { createSqlRepository } from "./repository.ts";
 
-export const taxYearsRepository: Repository<TaxYear, TaxYearInput> = createJsonRepository<TaxYear, TaxYearInput>("tax-years");
+export const taxYearsRepository = createSqlRepository<TaxYear, TaxYearInput>("tax-years");

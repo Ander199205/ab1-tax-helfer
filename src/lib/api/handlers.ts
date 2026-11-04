@@ -19,8 +19,10 @@ const belegeDat = (n: number) => (n === 1 ? "1 Beleg" : `${n} Belegen`);
 export const closedMessage = (year: number) =>
   `Das Steuerjahr ${year} ist abgeschlossen. Öffne es wieder, um Belege zu ändern.`;
 
-export const findYear = async (year: number) => (await taxYearsRepository.list()).find((y) => y.year === year);
-const receiptsOfYear = async (year: number) => (await receiptsRepository.list()).filter((r) => r.year === year);
+export const findYear = async (ownerId: string, year: number) =>
+  (await taxYearsRepository(ownerId).list()).find((y) => y.year === year);
+const receiptsOfYear = async (ownerId: string, year: number) =>
+  (await receiptsRepository(ownerId).list()).filter((r) => r.year === year);
 
 const sameContent = (a: TaxYear, b: Omit<TaxYear, "id" | "createdAt" | "updatedAt">) =>
   a.year === b.year && a.note === b.note && JSON.stringify(a.checklist) === JSON.stringify(b.checklist);
@@ -35,18 +37,18 @@ export const taxYearsHandlers = createCrudHandlers({
     current && isClosed(current) && isClosed(input) && !sameContent(current, input)
       ? `Das Steuerjahr ${current.year} ist abgeschlossen. Öffne es wieder, um etwas zu ändern.`
       : null,
-  check: async (input, current) => {
-    const years = await taxYearsRepository.list();
+  check: async (input, current, ownerId) => {
+    const years = await taxYearsRepository(ownerId).list();
     if (years.some((y) => y.year === input.year && y.id !== current?.id)) {
       return { year: `Das Steuerjahr ${input.year} gibt es schon.` };
     }
-    if (current && current.year !== input.year && (await receiptsOfYear(current.year)).length > 0) {
+    if (current && current.year !== input.year && (await receiptsOfYear(ownerId, current.year)).length > 0) {
       return { year: "Die Jahreszahl lässt sich nicht mehr ändern, weil schon Belege dazugehören." };
     }
     return {};
   },
-  beforeRemove: async (year) => {
-    const count = (await receiptsOfYear(year.year)).length;
+  beforeRemove: async (year, ownerId) => {
+    const count = (await receiptsOfYear(ownerId, year.year)).length;
     return count > 0
       ? `Zum Steuerjahr ${year.year} ${count === 1 ? "gehört" : "gehören"} noch ${belegeNom(count)}. Lösch oder verschieb sie zuerst.`
       : null;
@@ -58,18 +60,19 @@ export const receiptsHandlers = createCrudHandlers({
   parse: parseReceiptInput,
   validate: (input) => validateReceipt(input),
   notFound: "Beleg nicht gefunden.",
-  guard: async (input, current: Receipt | null) => {
-    if (current && isClosed(await findYear(current.year))) return closedMessage(current.year);
-    if (isClosed(await findYear(input.year))) return closedMessage(input.year);
+  guard: async (input, current: Receipt | null, ownerId) => {
+    if (current && isClosed(await findYear(ownerId, current.year))) return closedMessage(current.year);
+    if (isClosed(await findYear(ownerId, input.year))) return closedMessage(input.year);
     return null;
   },
-  check: async (input) => {
-    const categories = await categoriesRepository.list();
+  check: async (input, _current, ownerId) => {
+    const categories = await categoriesRepository(ownerId).list();
     if (!categories.some((c) => c.id === input.categoryId)) return { categoryId: "Diese Kategorie gibt es nicht mehr." };
-    if (!(await findYear(input.year))) return { year: `Leg zuerst das Steuerjahr ${input.year} an.` };
+    if (!(await findYear(ownerId, input.year))) return { year: `Leg zuerst das Steuerjahr ${input.year} an.` };
     return {};
   },
-  beforeRemove: async (receipt) => (isClosed(await findYear(receipt.year)) ? closedMessage(receipt.year) : null),
+  beforeRemove: async (receipt, ownerId) =>
+    isClosed(await findYear(ownerId, receipt.year)) ? closedMessage(receipt.year) : null,
   afterRemove: async (receipt) => {
     for (const file of receipt.files ?? []) {
       await deleteFile(file).catch((error) => console.error("Datei ließ sich nicht löschen", file.id, error));
@@ -82,9 +85,10 @@ export const categoriesHandlers = createCrudHandlers({
   parse: parseCategoryInput,
   validate: (input) => validateCategory(input),
   notFound: "Kategorie nicht gefunden.",
-  check: async (input, current) => validateCategory(input, await categoriesRepository.list(), current?.id),
-  beforeRemove: async (category) => {
-    const count = (await receiptsRepository.list()).filter((r) => r.categoryId === category.id).length;
+  check: async (input, current, ownerId) =>
+    validateCategory(input, await categoriesRepository(ownerId).list(), current?.id),
+  beforeRemove: async (category, ownerId) => {
+    const count = (await receiptsRepository(ownerId).list()).filter((r) => r.categoryId === category.id).length;
     return count > 0 ? `„${category.name}“ wird noch von ${belegeDat(count)} verwendet.` : null;
   },
 });

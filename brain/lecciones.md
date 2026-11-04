@@ -28,3 +28,8 @@ Propias:
 - 2026-11-04 — Pruebas con diálogos anidados: no pulsar Escape hasta que el de arriba tenga el foco; mejor su botón «Schließen».
 - 2026-11-04 — Los revisores no deben escribir en los datos vivos ni aunque crean que un año está cerrado: comprobarlo antes con un GET.
 - 2026-11-04 — Dos aprobaciones seguidas paradas por no anotar archivos de documentación: la plantilla de encargo ya incluye siempre `brain/`, `CLAUDE.md`, `docs/producto.md` y `tools/estado/datos.json`.
+- 2026-11-04 — El middleware de Next recorta a 10 MB el cuerpo que lo atraviesa: las subidas grandes llegaban vacías. Las rutas de subida van fuera del `matcher`.
+- 2026-11-04 — `scryptSync` en el servidor bloquea a todos los usuarios mientras calcula: siempre la versión asíncrona.
+- 2026-11-04 — Una prueba de aislamiento con lista fija se olvida de rutas: generarla desde `src/app/api/**/route.ts` y probar las dos direcciones.
+- 2026-11-04 — Las pruebas que cambian la contraseña de una cuenta de demo rompen las siguientes que la usan: cada prueba de sesiones usa su propia cuenta o restaura el estado.
+- 2026-11-04 — Cookies `__Host-`: en Playwright hay que pasarlas con `secure: true` y `path: "/"` explícitos.

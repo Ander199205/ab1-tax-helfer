@@ -50,3 +50,8 @@ next-env.d.ts
 # graphify: el grafo se regenera, no se sube
 /graphify-out/
 .capturas/
+
+# base de datos local (fase 4): nunca en git
+/data/*.db
+/data/*.db-wal
+/data/*.db-shm
