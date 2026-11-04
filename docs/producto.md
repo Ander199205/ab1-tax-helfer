@@ -2,7 +2,7 @@
 
 ## Qué es
 Una aplicación para **reunir, ordenar y entregar** los justificantes de un año fiscal (facturas, recibos, certificados)
-a la asesoría fiscal. Primero la usa Ander internamente; después se venderá a autónomos y pequeñas empresas en Alemania.
+a la asesoría fiscal. Primero la usa Ander internamente; después se ofrecerá a los clientes de ab1web (autónomos y pequeñas empresas en Alemania).
 
 ## Qué no es
 - No calcula impuestos ni dice qué es deducible (eso es asesoramiento fiscal, StBerG).
