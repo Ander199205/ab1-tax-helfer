@@ -13,6 +13,8 @@ import type { TaxYear } from "@/lib/types";
 export interface YearSummary {
   year: TaxYear;
   sum: ReceiptTotals;
+  /** Belege ohne Datei. */
+  missingFiles: number;
 }
 
 /** Resumen por año: número de justificantes, sumas por tipo y puntos pendientes. */
@@ -34,7 +36,7 @@ export function OverviewView({ summaries }: { summaries: YearSummary[] }) {
         // Dos columnas solo desde 1024 px: con la barra lateral, a 768 px no cabía el estado (revisión A).
         <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
           {sorted.map((year) => {
-            const sum = summaries.find((s) => s.year.id === year.id)!.sum;
+            const { sum, missingFiles } = summaries.find((s) => s.year.id === year.id)!;
             const open = openItems(year);
             return (
               <Card key={year.id}>
@@ -52,6 +54,8 @@ export function OverviewView({ summaries }: { summaries: YearSummary[] }) {
                     <dd className="text-right whitespace-nowrap tabular-nums">{formatAmount(sum.expenses)}</dd>
                     <dt className="text-muted-foreground">Summe Einnahmen</dt>
                     <dd className="text-right whitespace-nowrap tabular-nums">{formatAmount(sum.income)}</dd>
+                    <dt className="text-muted-foreground">Ohne Datei</dt>
+                    <dd className="text-right whitespace-nowrap tabular-nums">{missingFiles}</dd>
                     <dt className="text-muted-foreground">Was fehlt noch?</dt>
                     <dd className="text-right whitespace-nowrap">{open === 0 ? "Alles da" : `${open} von ${year.checklist.length} offen`}</dd>
                   </dl>

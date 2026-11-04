@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Pruebas de la API y de parseAmount (fase 2). Sin dependencias: `node --test`.
 // Uso, con la app en marcha:  BASE=http://localhost:3000 node --test tools/pruebas-api.mjs
-// OJO: borra data/*.json antes y después (los datos vuelven a los de data/seed/). Solo datos ficticios.
+// OJO: borra data/*.json y data/uploads/ antes y después (los datos vuelven a los de data/seed/). Solo datos ficticios.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -11,6 +11,7 @@ import { parseAmount, formatAmount } from "../src/lib/money.ts";
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const resetData = () => {
   for (const f of fs.readdirSync("data")) if (f.endsWith(".json")) fs.rmSync(path.join("data", f));
+  fs.rmSync(path.join("data", "uploads"), { recursive: true, force: true });
 };
 
 async function api(method, url, body, { raw, type = "application/json" } = {}) {
@@ -186,5 +187,88 @@ describe("API", () => {
     assert.equal(renamed.body.name, "Werkzeug & Geräte");
     assert.equal((await api("PATCH", `/api/categories/${c.body.id}`, { name: "Sonstiges" })).status, 400);
     assert.equal((await api("DELETE", `/api/categories/${c.body.id}`)).status, 204);
+  });
+
+  // ── Archivos (fase 3) ──
+  const PDF = new TextEncoder().encode("%PDF-1.4\n% Beispiel\n");
+  const PNG = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==", "base64"));
+  async function upload(receiptId, files) {
+    const form = new FormData();
+    for (const [name, bytes, type] of files) form.append("files", new Blob([bytes], { type }), name);
+    const res = await fetch(`${BASE}/api/receipts/${receiptId}/files`, { method: "POST", body: form });
+    return { status: res.status, body: await res.json() };
+  }
+  const uploadsOnDisk = () => (fs.existsSync("data/uploads") ? fs.readdirSync("data/uploads") : []);
+  const fresh = async () => (await api("POST", "/api/receipts", receipt({ party: "Dateitest" }))).body;
+
+  test("archivos: subir PDF y PNG, ver con cabeceras, nombre aleatorio en disco", async () => {
+    const r = await fresh();
+    assert.deepEqual(r.files, []);
+    const up = await upload(r.id, [["Rechnung März.pdf", PDF, "application/pdf"], ["foto.png", PNG, "image/png"]]);
+    assert.equal(up.status, 201);
+    assert.deepEqual(up.body.files.map((f) => [f.name, f.type, f.size]), [["Rechnung März.pdf", "application/pdf", PDF.length], ["foto.png", "image/png", PNG.length]]);
+    const disk = uploadsOnDisk();
+    for (const f of up.body.files) assert.ok(disk.some((d) => d.startsWith(f.id)), "archivo en disco con el id");
+    assert.ok(!disk.some((d) => d.includes("Rechnung")), "el nombre original no se usa en disco");
+    const res = await fetch(`${BASE}/api/receipts/${r.id}/files/${up.body.files[0].id}`);
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get("content-type"), "application/pdf");
+    assert.equal(res.headers.get("x-content-type-options"), "nosniff");
+    assert.match(res.headers.get("content-disposition"), /filename\*=UTF-8''Rechnung%20M%C3%A4rz\.pdf/);
+    assert.deepEqual(new Uint8Array(await res.arrayBuffer()), PDF);
+    // un PATCH normal no toca los archivos
+    const patched = await api("PATCH", `/api/receipts/${r.id}`, { note: "x", files: [] });
+    assert.equal(patched.body.files.length, 2);
+  });
+
+  test("archivos: rechazos (tipo por bytes, tamaño, número, vacío, sin multipart)", async () => {
+    const r = await fresh();
+    const fake = await upload(r.id, [["rechnung.pdf", new TextEncoder().encode("<html>no</html>"), "application/pdf"]]);
+    assert.equal(fake.status, 400);
+    assert.match(fake.body.errors.files, /Erlaubt sind PDF, JPG, PNG und WebP/);
+    const big = new Uint8Array(10 * 1024 * 1024 + 1); big.set(PDF);
+    const tooBig = await upload(r.id, [["gross.pdf", big, "application/pdf"]]);
+    assert.equal(tooBig.status, 400);
+    assert.match(tooBig.body.error, /zu groß/);
+    const empty = await upload(r.id, [["leer.pdf", new Uint8Array(0), "application/pdf"]]);
+    assert.equal(empty.status, 400);
+    assert.equal((await upload(r.id, [1, 2, 3, 4, 5].map((n) => [`${n}.pdf`, PDF, "application/pdf"]))).status, 201);
+    const sixth = await upload(r.id, [["6.pdf", PDF, "application/pdf"]]);
+    assert.equal(sixth.status, 400);
+    assert.match(sixth.body.error, /Höchstens 5 Dateien/);
+    const mixed = await upload((await fresh()).id, [["ok.pdf", PDF, "application/pdf"], ["boese.pdf", new TextEncoder().encode("MZ"), "application/pdf"]]);
+    assert.equal(mixed.status, 400, "si uno falla no se guarda ninguno");
+    const json = await api("POST", `/api/receipts/${r.id}/files`, { files: [] });
+    assert.equal(json.status, 415);
+  });
+
+  test("archivos: 404 con ids inventados o de otro Beleg", async () => {
+    assert.equal((await fetch(`${BASE}/api/receipts/beleg-02/files/8f1c2a10-1111-4a1a-9a01-000000000001`)).status, 404);
+    assert.equal((await fetch(`${BASE}/api/receipts/beleg-01/files/..%2F..%2Fpackage.json`)).status, 404);
+    assert.equal((await fetch(`${BASE}/api/receipts/no-existe/files/x`)).status, 404);
+  });
+
+  test("archivos: quitar borra del disco; borrar el Beleg borra sus archivos", async () => {
+    const r = await fresh();
+    const up = await upload(r.id, [["a.pdf", PDF, "application/pdf"], ["b.png", PNG, "image/png"]]);
+    const [a, b] = up.body.files;
+    const del = await api("DELETE", `/api/receipts/${r.id}/files/${a.id}`);
+    assert.equal(del.status, 200);
+    assert.deepEqual(del.body.files.map((f) => f.id), [b.id]);
+    assert.ok(!uploadsOnDisk().some((d) => d.startsWith(a.id)));
+    assert.equal((await api("DELETE", `/api/receipts/${r.id}`)).status, 204);
+    assert.ok(!uploadsOnDisk().some((d) => d.startsWith(b.id)));
+  });
+
+  test("archivos: año cerrado → subir y quitar 409, ver 200", async () => {
+    const y2025 = (await api("GET", "/api/tax-years")).body.find((y) => y.year === 2025);
+    await api("PATCH", `/api/tax-years/${y2025.id}`, { status: "abgeschlossen" });
+    assert.equal((await upload("beleg-01", [["x.pdf", PDF, "application/pdf"]])).status, 409);
+    assert.equal((await api("DELETE", "/api/receipts/beleg-01/files/8f1c2a10-1111-4a1a-9a01-000000000001")).status, 409);
+    assert.equal((await fetch(`${BASE}/api/receipts/beleg-01/files/8f1c2a10-1111-4a1a-9a01-000000000001`)).status, 200);
+    await api("PATCH", `/api/tax-years/${y2025.id}`, { status: "offen" });
+    // quitar un archivo de ejemplo no borra el original de data/seed/uploads
+    assert.equal((await api("DELETE", "/api/receipts/beleg-01/files/8f1c2a10-1111-4a1a-9a01-000000000001")).status, 200);
+    assert.ok(fs.existsSync("data/seed/uploads/8f1c2a10-1111-4a1a-9a01-000000000001.pdf"));
   });
 });

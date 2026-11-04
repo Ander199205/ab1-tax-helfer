@@ -10,15 +10,16 @@ import { validateReceipt } from "@/lib/receipts/rules";
 import { parseTaxYearInput } from "@/lib/tax-years/parse";
 import { isClosed, validateTaxYear } from "@/lib/tax-years/rules";
 import type { Receipt, TaxYear } from "@/lib/types";
+import { deleteFile } from "@/lib/data/file-store";
 import { createCrudHandlers } from "./crud-route";
 
 /** «1 Beleg» / «3 Belege» (nominativo) y «1 Beleg» / «3 Belegen» (dativo). */
 const belegeNom = (n: number) => (n === 1 ? "1 Beleg" : `${n} Belege`);
 const belegeDat = (n: number) => (n === 1 ? "1 Beleg" : `${n} Belegen`);
-const closedMessage = (year: number) =>
+export const closedMessage = (year: number) =>
   `Das Steuerjahr ${year} ist abgeschlossen. Öffne es wieder, um Belege zu ändern.`;
 
-const findYear = async (year: number) => (await taxYearsRepository.list()).find((y) => y.year === year);
+export const findYear = async (year: number) => (await taxYearsRepository.list()).find((y) => y.year === year);
 const receiptsOfYear = async (year: number) => (await receiptsRepository.list()).filter((r) => r.year === year);
 
 const sameContent = (a: TaxYear, b: Omit<TaxYear, "id" | "createdAt" | "updatedAt">) =>
@@ -69,6 +70,9 @@ export const receiptsHandlers = createCrudHandlers({
     return {};
   },
   beforeRemove: async (receipt) => (isClosed(await findYear(receipt.year)) ? closedMessage(receipt.year) : null),
+  afterRemove: async (receipt) => {
+    for (const file of receipt.files ?? []) await deleteFile(file);
+  },
 });
 
 export const categoriesHandlers = createCrudHandlers({

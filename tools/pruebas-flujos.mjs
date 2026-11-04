@@ -21,9 +21,11 @@ const OUT = ".capturas";
 fs.mkdirSync(OUT, { recursive: true });
 const resetData = () => {
   for (const f of fs.readdirSync("data")) if (f.endsWith(".json")) fs.rmSync(path.join("data", f));
+  fs.rmSync(path.join("data", "uploads"), { recursive: true, force: true });
 };
 
 let failures = 0;
+let currentPage = null; // para la captura de un paso que falla
 async function step(name, fn) {
   try {
     await fn();
@@ -31,6 +33,9 @@ async function step(name, fn) {
   } catch (e) {
     failures++;
     console.log(`  ✗ ${name}\n     ${String(e.message).split("\n")[0]}`);
+    const file = `${OUT}/fallo-${failures}.jpg`;
+    await currentPage?.screenshot({ path: file, type: "jpeg", quality: 50 }).catch(() => {});
+    console.log(`     captura: ${file}`);
   }
 }
 const visible = (loc) => loc.first().waitFor({ state: "visible", timeout: 5000 });
@@ -41,6 +46,7 @@ for (const width of [375, 1440]) {
   resetData();
   console.log(`\n@${width}px`);
   const page = await browser.newPage({ viewport: { width, height: 900 } });
+  currentPage = page;
   const jsErrors = [];
   page.on("pageerror", (e) => jsErrors.push(e.message));
   page.on("console", (m) => m.type() === "error" && !/status of 40[09]/.test(m.text()) && jsErrors.push(m.text()));
@@ -76,6 +82,10 @@ for (const width of [375, 1440]) {
     await page.getByRole("button", { name: "„Werkzeug & Geräte“ löschen" }).click();
     await page.getByRole("alertdialog").getByRole("button", { name: "Löschen" }).click();
     await gone(page.getByText("Werkzeug & Geräte", { exact: true }));
+    // el foco no se pierde en <body>: va a la fila vecina
+    await page.waitForFunction(() => document.activeElement && document.activeElement !== document.body);
+    const label = await page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? "");
+    if (!/umbenennen|löschen|gelöscht/.test(label)) throw new Error(`foco tras borrar en: ${label}`);
   });
 
   // 2. Steuerjahre
@@ -132,9 +142,32 @@ for (const width of [375, 1440]) {
     await gone(page.getByRole("dialog"));
     await page.waitForFunction(() => document.activeElement?.textContent?.includes("Neuer Beleg"));
   });
-  await step("neuer Beleg mit 1.234,56 (Jahr folgt dem Datum)", async () => {
+  const PDF = Buffer.from("%PDF-1.4\n% Beispiel\n");
+  const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==", "base64");
+  await step("X des Dialogs bleibt beim Scrollen sichtbar", async () => {
     await page.getByRole("button", { name: "Neuer Beleg" }).click();
     const dialog = page.getByRole("dialog");
+    await dialog.locator(".overflow-y-auto").first().evaluate((el) => el.scrollTo(0, el.scrollHeight));
+    const box = await dialog.getByRole("button", { name: "Schließen" }).boundingBox();
+    if (!box || box.y < 0 || box.y > 900) throw new Error(`X fuera de la vista: ${JSON.stringify(box)}`);
+    await page.keyboard.press("Escape");
+    await gone(page.getByRole("dialog"));
+  });
+  await step("Dateiauswahl: falscher Typ und zu groß werden abgelehnt", async () => {
+    await page.getByRole("button", { name: "Neuer Beleg" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.locator("#files-neu").setInputFiles({ name: "notiz.txt", mimeType: "text/plain", buffer: Buffer.from("hallo") });
+    await visible(dialog.getByText("Erlaubt sind PDF, JPG, PNG und WebP"));
+    await dialog.locator("#files-neu").setInputFiles({ name: "riesig.pdf", mimeType: "application/pdf", buffer: Buffer.alloc(10 * 1024 * 1024 + 1) });
+    await visible(dialog.getByText("zu groß"));
+    await page.keyboard.press("Escape");
+    await gone(page.getByRole("dialog"));
+  });
+  await step("neuer Beleg mit 1.234,56 (Jahr folgt dem Datum) und PDF", async () => {
+    await page.getByRole("button", { name: "Neuer Beleg" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.locator("#files-neu").setInputFiles({ name: "Rechnung Müller.pdf", mimeType: "application/pdf", buffer: PDF });
+    await visible(dialog.getByText("wird beim Speichern hochgeladen"));
     await dialog.getByLabel("Datum").fill("2026-03-15");
     if ((await dialog.getByLabel("Steuerjahr").inputValue()) !== "2026") throw new Error("el año no sigue a la fecha");
     await dialog.getByLabel("Betrag in €").fill("1.234,56");
@@ -143,6 +176,38 @@ for (const width of [375, 1440]) {
     await dialog.getByRole("button", { name: "Beleg speichern" }).click();
     await gone(page.getByRole("dialog"));
     await visible(list.getByText("1.234,56 €"));
+    await visible(list.getByRole("button", { name: /^1 Datei zum Beleg „Testfirma Müller“/ }));
+  });
+  await step("Datei per Drag & Drop hinzufügen, Foto ansehen, PDF-Link, Datei entfernen", async () => {
+    await list.getByRole("button", { name: /^1 Datei zum Beleg „Testfirma Müller“/ }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByTestId("dropzone").evaluate((zone, b64) => {
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const dt = new DataTransfer();
+      dt.items.add(new File([bytes], "foto.png", { type: "image/png" }));
+      zone.dispatchEvent(new DragEvent("drop", { dataTransfer: dt, bubbles: true, cancelable: true }));
+    }, PNG.toString("base64"));
+    await visible(dialog.getByText("foto.png"));
+    const pdfLink = dialog.getByRole("link", { name: /Rechnung Müller\.pdf/ });
+    if ((await pdfLink.getAttribute("target")) !== "_blank") throw new Error("el PDF no abre en pestaña nueva");
+    await dialog.getByRole("button", { name: "Vorschau von „foto.png“ öffnen" }).click();
+    await visible(page.getByRole("img", { name: "Beleg-Datei foto.png" }));
+    await page.keyboard.press("Escape");
+    await gone(page.getByRole("img", { name: "Beleg-Datei foto.png" }));
+    await dialog.getByRole("button", { name: "Datei „foto.png“ entfernen" }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Löschen" }).click();
+    await gone(page.getByRole("alertdialog"));
+    await gone(dialog.getByText("foto.png"));
+    // el foco vuelve a la fila que queda, no a <body>
+    await page.waitForFunction(() => document.activeElement?.textContent?.includes("Rechnung Müller.pdf"));
+    await page.keyboard.press("Escape");
+    await gone(page.getByRole("dialog", { name: "Dateien" }));
+  });
+  await step("Filter: nur ohne Datei", async () => {
+    await page.getByLabel("Datei", { exact: true }).selectOption("ohne");
+    await gone(list.getByText("Testfirma Müller"));
+    await visible(list.getByText("Stadtbank Leipzig"));
+    await page.getByLabel("Datei", { exact: true }).selectOption("alle");
   });
   await step("Beleg bearbeiten (99,5 → 99,50 €)", async () => {
     await page.getByRole("button", { name: "Beleg „Testfirma Müller“ vom 15.03.2026 bearbeiten" }).click();
@@ -181,6 +246,8 @@ for (const width of [375, 1440]) {
     await visible(c.getByText("717,88 €"));
     await visible(c.getByText("6.814,56 €"));
     await visible(c.getByText("3 von 5 offen"));
+    const missing = await c.locator("dt", { hasText: "Ohne Datei" }).locator("xpath=following-sibling::dd[1]").textContent();
+    if (missing?.trim() !== "9") throw new Error(`Ohne Datei: ${missing}`);
   });
   await shot("uebersicht");
 

@@ -1,7 +1,7 @@
 # Encargo 3: archivos de los justificantes (fase 3)
 
 - Slug / rama: `feature/fase-3-archivos`
-- Fecha: 04.11.2026 · Estado: **decisiones abiertas**
+- Fecha: 04.11.2026 · Estado: construcción
 - Tamaño: normal
 
 ## 1. Qué podrá hacer quien use la app
@@ -60,12 +60,12 @@ Además, dos pendientes de la fase 2: la X de cerrar los diálogos largos no des
 
 ## 7. Decisiones abiertas (se responden antes de construir)
 
-- [ ] **D1. Archivos por Beleg**: (a) hasta 5 (p. ej. factura de varias páginas fotografiada) — **recomendada**; (b) solo 1.
-- [ ] **D2. Tipos**: (a) PDF, JPG, PNG y WebP — **recomendada** (los iPhone convierten HEIC a JPG al subir desde el navegador); (b) añadir HEIC (no se ve en la mayoría de navegadores).
-- [ ] **D3. Tamaño máximo**: (a) 10 MB por archivo — **recomendada**; (b) otro.
-- [ ] **D4. Ver los archivos**: (a) fotos dentro de la app y PDF en pestaña nueva con el visor del navegador — **recomendada**; (b) también el PDF dentro de la app.
-- [ ] **D5. Belege sin archivo**: (a) marca «Datei fehlt» + filtro + número en la Übersicht — **recomendada**; (b) sin marcas.
-- [ ] **D6. Datos de ejemplo**: (a) 3–4 archivos inventados (factura PDF «Muster», foto de un ticket) en algunos Belege — **recomendada**; (b) sin archivos de ejemplo.
+- [x] **D1. Archivos por Beleg**: (a) hasta 5 (p. ej. factura de varias páginas fotografiada) — **recomendada**; (b) solo 1.
+- [x] **D2. Tipos**: (a) PDF, JPG, PNG y WebP — **recomendada** (los iPhone convierten HEIC a JPG al subir desde el navegador); (b) añadir HEIC (no se ve en la mayoría de navegadores).
+- [x] **D3. Tamaño máximo**: (a) 10 MB por archivo — **recomendada**; (b) otro.
+- [x] **D4. Ver los archivos**: (a) fotos dentro de la app y PDF en pestaña nueva con el visor del navegador — **recomendada**; (b) también el PDF dentro de la app.
+- [x] **D5. Belege sin archivo**: (a) marca «Datei fehlt» + filtro + número en la Übersicht — **recomendada**; (b) sin marcas.
+- [x] **D6. Datos de ejemplo**: (a) 3–4 archivos inventados (factura PDF «Muster», foto de un ticket) en algunos Belege — **recomendada**; (b) sin archivos de ejemplo.
 
 Supuestos de riesgo bajo:
 - Nombres en disco aleatorios (UUID) y nombre original solo como dato; la subida es independiente del formulario (se sube al elegir, no al pulsar «Speichern») en Belege ya guardados; en un Beleg nuevo, los archivos se suben justo después de crearlo.

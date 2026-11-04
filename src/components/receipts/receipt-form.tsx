@@ -12,27 +12,32 @@ import { todayLocal } from "@/lib/dates";
 import { amountToInput, parseAmount } from "@/lib/money";
 import { validateReceipt, yearOf, type ReceiptErrors } from "@/lib/receipts/rules";
 import { isClosed } from "@/lib/tax-years/rules";
+import { ReceiptFiles } from "./receipt-files";
 import {
   RECEIPT_KIND_LABELS,
   RECEIPT_KINDS,
   type Category,
+  type Receipt,
   type ReceiptInput,
   type ReceiptKind,
   type TaxYear,
 } from "@/lib/types";
 
 interface ReceiptFormProps {
-  initial?: ReceiptInput;
+  /** Beleg que se edita (sin él, es uno nuevo). */
+  initial?: Receipt;
   years: TaxYear[];
   categories: Category[];
   submitLabel: string;
-  /** Devuelve errores del servidor (si los hay) o null si se guardó bien. */
-  onSubmit: (input: ReceiptInput) => Promise<FieldErrors | null>;
+  /** Devuelve errores del servidor (si los hay) o null si se guardó bien. `files`: los elegidos antes de guardar. */
+  onSubmit: (input: ReceiptInput, files: File[]) => Promise<FieldErrors | null>;
+  /** Tras subir o quitar archivos de un Beleg ya guardado. */
+  onFilesChange?: (receipt: Receipt) => void;
   onCancel: () => void;
 }
 
 /** Formulario de un justificante. El año sigue a la fecha hasta que se elige a mano (decisión D2). */
-export function ReceiptForm({ initial, years, categories, submitLabel, onSubmit, onCancel }: ReceiptFormProps) {
+export function ReceiptForm({ initial, years, categories, submitLabel, onSubmit, onCancel, onFilesChange }: ReceiptFormProps) {
   const today = todayLocal();
   const [date, setDate] = useState(initial?.date ?? today);
   const [year, setYear] = useState(String(initial?.year ?? yearOf(today)));
@@ -43,6 +48,7 @@ export function ReceiptForm({ initial, years, categories, submitLabel, onSubmit,
   const [description, setDescription] = useState(initial?.description ?? "");
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? "");
   const [note, setNote] = useState(initial?.note ?? "");
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [serverErrors, setServerErrors] = useState<ReceiptErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -75,7 +81,7 @@ export function ReceiptForm({ initial, years, categories, submitLabel, onSubmit,
     setSubmitted(true);
     if (Object.keys(liveErrors).length > 0) return focusFirstInvalid();
     setSaving(true);
-    const result = await onSubmit(candidate);
+    const result = await onSubmit(candidate, pendingFiles);
     setSaving(false);
     if (result) {
       setServerErrors(result as ReceiptErrors);
@@ -243,6 +249,14 @@ export function ReceiptForm({ initial, years, categories, submitLabel, onSubmit,
         />
         {warning("note")}
       </div>
+
+      <ReceiptFiles
+        receiptId={initial?.id ?? null}
+        files={initial?.files ?? []}
+        pending={pendingFiles}
+        onPendingChange={setPendingFiles}
+        onChange={onFilesChange}
+      />
 
       <div className="flex flex-wrap gap-2 pt-1">
         <Button type="submit" disabled={saving} className="flex-1">

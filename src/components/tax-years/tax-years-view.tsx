@@ -91,13 +91,14 @@ export function TaxYearsView({ initialYears, counts }: TaxYearsViewProps) {
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
           {sorted.map((year) => (
+            <div key={year.id} data-row>
             <YearCard
-              key={year.id}
               year={year}
               count={counts[year.year] ?? 0}
               onUpdate={(patch, success) => update(year.id, patch, success)}
               onRemove={() => remove(year)}
             />
+            </div>
           ))}
         </div>
       )}

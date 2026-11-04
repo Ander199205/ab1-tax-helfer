@@ -10,7 +10,10 @@ export default async function OverviewPage() {
   const [years, receipts] = await Promise.all([taxYearsRepository.list(), receiptsRepository.list()]);
   const summaries = [...years]
     .sort((a, b) => b.year - a.year)
-    .map((year) => ({ year, sum: totals(receipts.filter((r) => r.year === year.year)) }));
+    .map((year) => {
+      const ofYear = receipts.filter((r) => r.year === year.year);
+      return { year, sum: totals(ofYear), missingFiles: ofYear.filter((r) => (r.files ?? []).length === 0).length };
+    });
 
   return (
     <>
