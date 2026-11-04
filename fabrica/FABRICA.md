@@ -1,6 +1,6 @@
 # Fábrica ab1web · v2 (encargos demostrados)
 
-> Copia de `ab1web/fabrica/FABRICA.md` (v2) para **abWeb Tax Organizer**. Diferencias en este repo:
+> Copia de `ab1web/fabrica/FABRICA.md` (v2) para **ab1 Tax Helfer**. Diferencias en este repo:
 > - Checklist: `fabrica/checklist-app.md` (en lugar de la skill `ab1web-calidad`). Revisores: 1 diseño y responsive (A),
 >   2 accesibilidad (B), 3 idioma y contenido (C), 4 datos, seguridad y técnica (D, E).
 > - Controles automáticos: `npx tsc --noEmit`, `npm run lint`, `npm run build` y `node tools/capturas.mjs --url http://localhost:3000 --sin-capturas`.
@@ -96,7 +96,7 @@ Un encargo no puede marcarse terminado si falla cualquiera de estos:
 - [ ] Todos los criterios de aceptación con evidencia «cumple».
 - [ ] `tools/capturas.mjs --sin-capturas --idiomas de,en,es`: ningún aviso **nuevo** respecto a `main` en las páginas afectadas (0 scroll horizontal, 0 textos partidos, 0 terceros).
 - [ ] HTML válido en lo tocado (sin etiquetas sin cerrar ni ids duplicados).
-- [ ] (Tax Organizer) `tsc`, `lint`, `build` sin errores y `npm audit --omit=dev` sin altas nuevas.
+- [ ] (ab1 Tax Helfer) `tsc`, `lint`, `build` sin errores y `npm audit --omit=dev` sin altas nuevas.
 - [ ] Contraste medido de todo color nuevo o cambiado (ratio anotado).
 - [ ] Textos nuevos presentes en `en`, `de` y `es`; nada en inglés en la versión alemana.
 - [ ] Ninguna decisión de `brain/decisiones.md` contradicha.

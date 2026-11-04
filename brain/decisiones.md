@@ -1,6 +1,6 @@
 # Decisiones
 
-- 2026-11-04 — Producto independiente en su propio repo, creado copiando la base de `panel-contenido` (Next 15, shadcn, `Repository<T>`, `createCrudHandlers`, `useCrud`). Sin monorepo ni paquete compartido hasta que haya un tercer producto.
+- 2026-11-04 — Producto independiente en su propio repo (carpeta local `abweb-tax-organizer`; nombre del repo en GitHub según lo cree Ander), creado copiando la base de `panel-contenido` (Next 15, shadcn, `Repository<T>`, `createCrudHandlers`, `useCrud`). Sin monorepo ni paquete compartido hasta que haya un tercer producto.
 - 2026-11-04 — Para los clientes de ab1web (autónomos y pymes en Alemania). Primero uso y prueba internos; después producto de venta.
 - 2026-11-04 — Alcance: reunir y ordenar justificantes por año y exportarlos a la asesoría fiscal. Sin cálculos de impuestos ni consejos (StBerG). La portada lo dice: «berechnet keine Steuern und ersetzt keine Steuerberatung».
 - 2026-11-04 — Interfaz en alemán; código y documentación en español.
@@ -9,7 +9,5 @@
 - 2026-11-04 — Graphify como mapa del código (skill del proyecto). Sus hooks `PreToolUse` no se suben: fallarían en sesiones sin Graphify instalado.
 - 2026-11-04 — `noindex` mientras sea uso interno.
 
-## Pendientes de decisión (Ander)
-
-- Tratamiento en la interfaz: «du» (como la web de ab1web) o «Sie» (más habitual en software fiscal para empresas).
-- Nombre y marca: «abWeb» frente a «ab1web».
+- 2026-11-04 — Tratamiento: «du» en toda la interfaz, como la web de ab1web; la empresa habla en «wir». (Ander)
+- 2026-11-04 — Nombre: «ab1 Tax Helfer» (Ander). Riesgo anotado: «Helfer» puede sugerir «Hilfeleistung in Steuersachen» (StBerG); por eso la portada y los textos de venta dicen siempre que no calcula impuestos ni sustituye a la asesoría fiscal. Antes de vender, que lo revise un profesional (nombre y textos).

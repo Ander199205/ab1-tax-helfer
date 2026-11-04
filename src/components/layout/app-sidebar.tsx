@@ -20,11 +20,11 @@ export function AppSidebar() {
     <aside className="sticky top-0 z-30 border-b border-sidebar-border bg-sidebar md:fixed md:inset-y-0 md:left-0 md:w-60 md:border-r md:border-b-0">
       <div className="flex items-center gap-2 px-4 py-3 md:px-5 md:py-6">
         <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
-          TO
+          ab1
         </div>
         <div className="leading-tight">
-          <p className="text-sm font-semibold">Tax Organizer</p>
-          <p className="text-xs text-muted-foreground">abWeb · Belege ordnen</p>
+          <p className="text-sm font-semibold">Tax Helfer</p>
+          <p className="text-xs text-muted-foreground">Belege ordnen</p>
         </div>
       </div>
 

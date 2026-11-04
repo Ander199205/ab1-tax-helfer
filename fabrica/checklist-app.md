@@ -1,4 +1,4 @@
-# Checklist de calidad — Tax Organizer (app)
+# Checklist de calidad — ab1 Tax Helfer (app)
 
 Derivada de la checklist de `ab1web-calidad` (web). Se quita lo que es de web pública (SEO, hreflang, Open Graph)
 y se añade lo propio de una app con datos. ● = bloqueante.
@@ -18,7 +18,7 @@ y se añade lo propio de una app con datos. ● = bloqueante.
 
 ## C. Idioma y contenido (alemán)
 - [ ] C1 ● Ningún texto visible en español o inglés (incluidos `aria-label`, mensajes de error y avisos).
-- [ ] C2 ● Alemán natural, sin tratamiento directo hasta decidir «du»/«Sie».
+- [ ] C2 ● Alemán natural, tuteando con «du» de forma coherente; la empresa habla en «wir».
 - [ ] C3 ● Importes «1.234,56 €» y fechas «04.11.2026»; entrada de números alemanes aceptada.
 - [ ] C4 ● Sin consejos fiscales ni promesas («absetzbar», «Steuern sparen», «garantiert»): StBerG y UWG.
 

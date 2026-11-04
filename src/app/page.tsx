@@ -8,7 +8,7 @@ export default function HomePage() {
     <>
       <PageHeader
         title="Übersicht"
-        description="Belege pro Steuerjahr sammeln, ordnen und an die Steuerberatung übergeben. Der Tax Organizer berechnet keine Steuern und ersetzt keine Steuerberatung."
+        description="Belege pro Steuerjahr sammeln, ordnen und an die Steuerberatung übergeben. Der ab1 Tax Helfer berechnet keine Steuern und ersetzt keine Steuerberatung."
       />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {NAV_ITEMS.filter((item) => item.href !== "/").map(({ href, label, icon: Icon, description }) => (

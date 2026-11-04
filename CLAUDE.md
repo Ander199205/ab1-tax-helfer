@@ -1,8 +1,8 @@
-# CLAUDE.md — abWeb Tax Organizer
+# CLAUDE.md — ab1 Tax Helfer
 
 Aplicación web para **reunir y ordenar justificantes (Belege) por año fiscal y entregarlos a la asesoría fiscal**.
 Primero uso y prueba internos; después, producto de venta para el mercado alemán.
-**Organiza, no asesora:** no calcula impuestos ni da recomendaciones fiscales (StBerG). Ver `docs/producto.md`.
+**Organiza, no asesora** (el nombre lleva «Helfer», así que los textos deben dejarlo aún más claro): no calcula impuestos ni da recomendaciones fiscales (StBerG). Ver `docs/producto.md`.
 
 **Estado:** fase 1 terminada (base vacía que arranca). Plan de fases en `docs/producto.md`.
 
@@ -48,7 +48,7 @@ fabrica/  brain/  docs/
 ## Idioma (obligatorio)
 
 - Código, comentarios y documentación: español de España.
-- **Interfaz: alemán** natural, escrito en alemán. Forma de tratamiento («du» o «Sie»): **pendiente de decidir**; hasta entonces, textos sin tratamiento directo.
+- **Interfaz: alemán** natural, escrito en alemán. Se tutea con «du» (como la web de ab1web); nunca «Sie». La empresa habla en «wir».
 - Importes y fechas en formato alemán: «1.234,56 €», «04.11.2026».
 
 ## Reglas

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Capturas y comprobaciones rápidas de abWeb Tax Organizer (copiado de ab1web/tools/capturas.mjs).
+// Capturas y comprobaciones rápidas de ab1 Tax Helfer (copiado de ab1web/tools/capturas.mjs).
 // Uso con la app en marcha (npm run dev o npm start):
 //   node tools/capturas.mjs --url http://localhost:3000 [--out .capturas] [--anchos 375,768,1200,1440] [--sin-capturas] / /belege …
 // Sin rutas: revisa todas las secciones de src/lib/navigation.ts.

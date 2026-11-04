@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "abWeb Tax Organizer",
+  title: "ab1 Tax Helfer",
   description: "Belege pro Steuerjahr sammeln, ordnen und an die Steuerberatung übergeben.",
   // Uso interno: que ningún buscador indexe la app.
   robots: { index: false, follow: false },
